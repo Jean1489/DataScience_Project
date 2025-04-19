@@ -1,0 +1,6 @@
+# Configuración de la base de datos origen
+host: localhost
+database: db_source
+user: postgres
+password: your_password
+port: 5432

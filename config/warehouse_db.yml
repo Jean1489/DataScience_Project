@@ -1,0 +1,6 @@
+# Configuración del Data Warehouse
+host: localhost
+database: warehouse_mensajeria
+user: postgres
+password: your_password
+port: 5432

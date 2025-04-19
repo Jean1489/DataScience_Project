@@ -1,0 +1,235 @@
+# Scripts SQL para el proceso ETL
+
+# Scripts para crear tablas en el Data Warehouse
+create_tables:
+  dim_cliente: |
+    CREATE TABLE IF NOT EXISTS dim_cliente (
+        id_cliente SERIAL PRIMARY KEY,
+        nombre_cliente VARCHAR(100),
+        tipo_cliente VARCHAR(50),
+        industria VARCHAR(50),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_sede: |
+    CREATE TABLE IF NOT EXISTS dim_sede (
+        id_sede SERIAL PRIMARY KEY,
+        nombre_sede VARCHAR(100),
+        ciudad VARCHAR(50),
+        direccion VARCHAR(200),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_mensajero: |
+    CREATE TABLE IF NOT EXISTS dim_mensajero (
+        id_mensajero SERIAL PRIMARY KEY,
+        nombre_mensajero VARCHAR(100),
+        antiguedad INT,
+        puntuacion_servicio DECIMAL(3,2),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_tiempo: |
+    CREATE TABLE IF NOT EXISTS dim_tiempo (
+        id_tiempo SERIAL PRIMARY KEY,
+        fecha DATE,
+        anio INT,
+        mes INT,
+        dia INT,
+        dia_semana INT,
+        hora INT,
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_geografia: |
+    CREATE TABLE IF NOT EXISTS dim_geografia (
+        id_geografia SERIAL PRIMARY KEY,
+        ciudad_origen VARCHAR(50),
+        ciudad_destino VARCHAR(50),
+        distancia_aproximada DECIMAL(10,2),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_estado: |
+    CREATE TABLE IF NOT EXISTS dim_estado (
+        id_estado SERIAL PRIMARY KEY,
+        estado_servicio VARCHAR(50),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_novedad: |
+    CREATE TABLE IF NOT EXISTS dim_novedad (
+        id_novedad SERIAL PRIMARY KEY,
+        descripcion_novedad VARCHAR(200),
+        tipo VARCHAR(50),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_tiempo_espera: |
+    CREATE TABLE IF NOT EXISTS dim_tiempo_espera (
+        id_tiempo_espera SERIAL PRIMARY KEY,
+        categoria VARCHAR(50),
+        rango_tiempo VARCHAR(50),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  dim_tipo_servicio: |
+    CREATE TABLE IF NOT EXISTS dim_tipo_servicio (
+        id_tipo_servicio SERIAL PRIMARY KEY,
+        tipo_servicio VARCHAR(50),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+
+  dim_medio_pago: |
+    CREATE TABLE IF NOT EXISTS dim_medio_pago (
+        id_medio_pago SERIAL PRIMARY KEY,
+        metodo_pago VARCHAR(50),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  
+  fact_servicios_mensajeria: |
+    CREATE TABLE IF NOT EXISTS fact_servicios_mensajeria (
+        id_servicio SERIAL PRIMARY KEY,
+        id_cliente INT REFERENCES dim_cliente(id_cliente),
+        id_sede INT REFERENCES dim_sede(id_sede),
+        id_mensajero INT REFERENCES dim_mensajero(id_mensajero),
+        id_tiempo INT REFERENCES dim_tiempo(id_tiempo),
+        id_geografia INT REFERENCES dim_geografia(id_geografia),
+        id_estado INT REFERENCES dim_estado(id_estado),
+        id_novedad INT REFERENCES dim_novedad(id_novedad),
+        id_tiempo_espera INT REFERENCES dim_tiempo_espera(id_tiempo_espera),
+        id_tipo_servicio INT REFERENCES dim_tipo_servicio(id_tipo_servicio),
+        id_medio_pago INT REFERENCES dim_medio_pago(id_medio_pago),
+        tiempo_total_servicio INT,
+        tiempo_por_fase INT,
+        tiempo_espera INT,
+        costo_servicio DECIMAL(10,2),
+        descuentos_aplicados DECIMAL(10,2),
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+
+# Scripts para actualizar/insertar dimensiones (Slowly Changing Dimensions tipo 1)
+merge_dimensions:
+  cliente: |
+    INSERT INTO dim_cliente (id_cliente, nombre_cliente, tipo_cliente, industria)
+    SELECT t.id_cliente, t.nombre_cliente, t.tipo_cliente, t.industria
+    FROM dim_cliente_temp t
+    LEFT JOIN dim_cliente d ON d.id_cliente = t.id_cliente
+    WHERE d.id_cliente IS NULL
+    
+    ON CONFLICT (id_cliente) DO UPDATE 
+    SET nombre_cliente = EXCLUDED.nombre_cliente,
+        tipo_cliente = EXCLUDED.tipo_cliente,
+        industria = EXCLUDED.industria;
+  
+  sede: |
+    INSERT INTO dim_sede (id_sede, nombre_sede, ciudad, direccion)
+    SELECT t.id_sede, t.nombre_sede, t.ciudad, t.direccion
+    FROM dim_sede_temp t
+    LEFT JOIN dim_sede d ON d.id_sede = t.id_sede
+    WHERE d.id_sede IS NULL
+    
+    ON CONFLICT (id_sede) DO UPDATE 
+    SET nombre_sede = EXCLUDED.nombre_sede,
+        ciudad = EXCLUDED.ciudad,
+        direccion = EXCLUDED.direccion;
+  
+  mensajero: |
+    INSERT INTO dim_mensajero (id_mensajero, nombre_mensajero, antiguedad, puntuacion_servicio)
+    SELECT t.id_mensajero, t.nombre_mensajero, t.antiguedad, t.puntuacion_servicio
+    FROM dim_mensajero_temp t
+    LEFT JOIN dim_mensajero d ON d.id_mensajero = t.id_mensajero
+    WHERE d.id_mensajero IS NULL
+    
+    ON CONFLICT (id_mensajero) DO UPDATE 
+    SET nombre_mensajero = EXCLUDED.nombre_mensajero,
+        antiguedad = EXCLUDED.antiguedad,
+        puntuacion_servicio = EXCLUDED.puntuacion_servicio;
+  
+  estado: |
+    INSERT INTO dim_estado (id_estado, estado_servicio)
+    SELECT t.id_estado, t.estado_servicio
+    FROM dim_estado_temp t
+    LEFT JOIN dim_estado d ON d.id_estado = t.id_estado
+    WHERE d.id_estado IS NULL
+    
+    ON CONFLICT (id_estado) DO UPDATE 
+    SET estado_servicio = EXCLUDED.estado_servicio;
+  
+  novedad: |
+    INSERT INTO dim_novedad (id_novedad, descripcion_novedad, tipo)
+    SELECT t.id_novedad, t.descripcion_novedad, t.tipo
+    FROM dim_novedad_temp t
+    LEFT JOIN dim_novedad d ON d.id_novedad = t.id_novedad
+    WHERE d.id_novedad IS NULL
+    
+    ON CONFLICT (id_novedad) DO UPDATE 
+    SET descripcion_novedad = EXCLUDED.descripcion_novedad,
+        tipo = EXCLUDED.tipo;
+  
+  tipo_servicio: |
+    INSERT INTO dim_tipo_servicio (id_tipo_servicio, tipo_servicio)
+    SELECT t.id_tipo_servicio, t.tipo_servicio
+    FROM dim_tipo_servicio_temp t
+    LEFT JOIN dim_tipo_servicio d ON d.id_tipo_servicio = t.id_tipo_servicio
+    WHERE d.id_tipo_servicio IS NULL
+    
+    ON CONFLICT (id_tipo_servicio) DO UPDATE 
+    SET tipo_servicio = EXCLUDED.tipo_servicio;
+  
+  medio_pago: |
+    INSERT INTO dim_medio_pago (id_medio_pago, metodo_pago)
+    SELECT t.id_medio_pago, t.metodo_pago
+    FROM dim_medio_pago_temp t
+    LEFT JOIN dim_medio_pago d ON d.id_medio_pago = t.id_medio_pago
+    WHERE d.id_medio_pago IS NULL
+    
+    ON CONFLICT (id_medio_pago) DO UPDATE 
+    SET metodo_pago = EXCLUDED.metodo_pago;
+  
+  tiempo: |
+    INSERT INTO dim_tiempo (fecha, anio, mes, dia, dia_semana, hora)
+    SELECT t.fecha, t.anio, t.mes, t.dia, t.dia_semana, t.hora
+    FROM dim_tiempo_temp t
+    LEFT JOIN dim_tiempo d ON 
+        d.fecha = t.fecha AND 
+        d.hora = t.hora
+    WHERE d.id_tiempo IS NULL;
+  
+  geografia: |
+    INSERT INTO dim_geografia (ciudad_origen, ciudad_destino, distancia_aproximada)
+    SELECT t.ciudad_origen, t.ciudad_destino, t.distancia_aproximada
+    FROM dim_geografia_temp t
+    LEFT JOIN dim_geografia d ON 
+        d.ciudad_origen = t.ciudad_origen AND 
+        d.ciudad_destino = t.ciudad_destino
+    WHERE d.id_geografia IS NULL;
+  
+  tiempo_espera: |
+    INSERT INTO dim_tiempo_espera (categoria, rango_tiempo)
+    SELECT t.categoria, t.rango_tiempo
+    FROM dim_tiempo_espera_temp t
+    LEFT JOIN dim_tiempo_espera d ON 
+        d.categoria = t.categoria AND 
+        d.rango_tiempo = t.rango_tiempo
+    WHERE d.id_tiempo_espera IS NULL;
+
+# Script para cargar la tabla de hechos
+load_fact_table: |
+  -- Eliminar registros existentes para evitar duplicados
+  DELETE FROM fact_servicios_mensajeria 
+  WHERE id_servicio IN (SELECT id_servicio FROM fact_servicios_mensajeria_temp);
+  
+  -- Insertar nuevos registros
+  INSERT INTO fact_servicios_mensajeria (
+      id_servicio, id_cliente, id_sede, id_mensajero, id_tiempo, 
+      id_geografia, id_estado, id_novedad, id_tiempo_espera, 
+      id_tipo_servicio, id_medio_pago, tiempo_total_servicio, tiempo_por_fase, 
+      tiempo_espera, costo_servicio, descuentos_aplicados
+  )
+  SELECT 
+      id_servicio, id_cliente, id_sede, id_mensajero, id_tiempo, 
+      id_geografia, id_estado, id_novedad, id_tiempo_espera, 
+      id_tipo_servicio, id_medio_pago, tiempo_total_servicio, tiempo_por_fase, 
+      tiempo_espera, costo_servicio, descuentos_aplicados
+  FROM fact_servicios_mensajeria_temp;
