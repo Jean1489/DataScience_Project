@@ -1,235 +1,1030 @@
-# Scripts SQL para el proceso ETL
+# SQL Scripts for ETL process
+# This file contains SQL queries for extraction, transformation, and table creation
 
-# Scripts para crear tablas en el Data Warehouse
-create_tables:
-  dim_cliente: |
-    CREATE TABLE IF NOT EXISTS dim_cliente (
-        id_cliente SERIAL PRIMARY KEY,
-        nombre_cliente VARCHAR(100),
-        tipo_cliente VARCHAR(50),
-        industria VARCHAR(50),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_sede: |
-    CREATE TABLE IF NOT EXISTS dim_sede (
-        id_sede SERIAL PRIMARY KEY,
-        nombre_sede VARCHAR(100),
-        ciudad VARCHAR(50),
-        direccion VARCHAR(200),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_mensajero: |
-    CREATE TABLE IF NOT EXISTS dim_mensajero (
-        id_mensajero SERIAL PRIMARY KEY,
-        nombre_mensajero VARCHAR(100),
-        antiguedad INT,
-        puntuacion_servicio DECIMAL(3,2),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_tiempo: |
-    CREATE TABLE IF NOT EXISTS dim_tiempo (
-        id_tiempo SERIAL PRIMARY KEY,
-        fecha DATE,
-        anio INT,
-        mes INT,
-        dia INT,
-        dia_semana INT,
-        hora INT,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_geografia: |
-    CREATE TABLE IF NOT EXISTS dim_geografia (
-        id_geografia SERIAL PRIMARY KEY,
-        ciudad_origen VARCHAR(50),
-        ciudad_destino VARCHAR(50),
-        distancia_aproximada DECIMAL(10,2),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_estado: |
-    CREATE TABLE IF NOT EXISTS dim_estado (
-        id_estado SERIAL PRIMARY KEY,
-        estado_servicio VARCHAR(50),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_novedad: |
-    CREATE TABLE IF NOT EXISTS dim_novedad (
-        id_novedad SERIAL PRIMARY KEY,
-        descripcion_novedad VARCHAR(200),
-        tipo VARCHAR(50),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_tiempo_espera: |
-    CREATE TABLE IF NOT EXISTS dim_tiempo_espera (
-        id_tiempo_espera SERIAL PRIMARY KEY,
-        categoria VARCHAR(50),
-        rango_tiempo VARCHAR(50),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  dim_tipo_servicio: |
-    CREATE TABLE IF NOT EXISTS dim_tipo_servicio (
-        id_tipo_servicio SERIAL PRIMARY KEY,
-        tipo_servicio VARCHAR(50),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-
-  dim_medio_pago: |
-    CREATE TABLE IF NOT EXISTS dim_medio_pago (
-        id_medio_pago SERIAL PRIMARY KEY,
-        metodo_pago VARCHAR(50),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  
-  fact_servicios_mensajeria: |
-    CREATE TABLE IF NOT EXISTS fact_servicios_mensajeria (
-        id_servicio SERIAL PRIMARY KEY,
-        id_cliente INT REFERENCES dim_cliente(id_cliente),
-        id_sede INT REFERENCES dim_sede(id_sede),
-        id_mensajero INT REFERENCES dim_mensajero(id_mensajero),
-        id_tiempo INT REFERENCES dim_tiempo(id_tiempo),
-        id_geografia INT REFERENCES dim_geografia(id_geografia),
-        id_estado INT REFERENCES dim_estado(id_estado),
-        id_novedad INT REFERENCES dim_novedad(id_novedad),
-        id_tiempo_espera INT REFERENCES dim_tiempo_espera(id_tiempo_espera),
-        id_tipo_servicio INT REFERENCES dim_tipo_servicio(id_tipo_servicio),
-        id_medio_pago INT REFERENCES dim_medio_pago(id_medio_pago),
-        tiempo_total_servicio INT,
-        tiempo_por_fase INT,
-        tiempo_espera INT,
-        costo_servicio DECIMAL(10,2),
-        descuentos_aplicados DECIMAL(10,2),
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-
-# Scripts para actualizar/insertar dimensiones (Slowly Changing Dimensions tipo 1)
-merge_dimensions:
+# Extraction queries
+extract:
+  # Operational data for clients
   cliente: |
-    INSERT INTO dim_cliente (id_cliente, nombre_cliente, tipo_cliente, industria)
-    SELECT t.id_cliente, t.nombre_cliente, t.tipo_cliente, t.industria
-    FROM dim_cliente_temp t
-    LEFT JOIN dim_cliente d ON d.id_cliente = t.id_cliente
-    WHERE d.id_cliente IS NULL
-    
-    ON CONFLICT (id_cliente) DO UPDATE 
-    SET nombre_cliente = EXCLUDED.nombre_cliente,
-        tipo_cliente = EXCLUDED.tipo_cliente,
-        industria = EXCLUDED.industria;
+    SELECT 
+      cliente_id AS id_cliente,
+      nit_cliente,
+      nombre,
+      email,
+      direccion,
+      telefono,
+      nombre_contacto,
+      ciudad_id,
+      tipo_cliente_id,
+      activo,
+      coordinador_id,
+      sector
+    FROM cliente
   
   sede: |
-    INSERT INTO dim_sede (id_sede, nombre_sede, ciudad, direccion)
-    SELECT t.id_sede, t.nombre_sede, t.ciudad, t.direccion
-    FROM dim_sede_temp t
-    LEFT JOIN dim_sede d ON d.id_sede = t.id_sede
-    WHERE d.id_sede IS NULL
-    
-    ON CONFLICT (id_sede) DO UPDATE 
-    SET nombre_sede = EXCLUDED.nombre_sede,
-        ciudad = EXCLUDED.ciudad,
-        direccion = EXCLUDED.direccion;
+    SELECT 
+      sede_id,
+      nombre,
+      direccion,
+      telefono,
+      nombre_contacto,
+      ciudad_id,
+      cliente_id
+    FROM sede
+  
+  area: |
+    SELECT
+      area_id,
+      nombre,
+      descripcion
+    FROM area
+  
+  ciudad: |
+    SELECT
+      ciudad_id,
+      nombre AS nombre_ciudad,
+      departamento_id
+    FROM ciudad 
+  
+  departamento: |
+    SELECT
+      departamento_id,
+      nombre
+    FROM departamento
   
   mensajero: |
-    INSERT INTO dim_mensajero (id_mensajero, nombre_mensajero, antiguedad, puntuacion_servicio)
-    SELECT t.id_mensajero, t.nombre_mensajero, t.antiguedad, t.puntuacion_servicio
-    FROM dim_mensajero_temp t
-    LEFT JOIN dim_mensajero d ON d.id_mensajero = t.id_mensajero
-    WHERE d.id_mensajero IS NULL
-    
-    ON CONFLICT (id_mensajero) DO UPDATE 
-    SET nombre_mensajero = EXCLUDED.nombre_mensajero,
-        antiguedad = EXCLUDED.antiguedad,
-        puntuacion_servicio = EXCLUDED.puntuacion_servicio;
+    SELECT
+      id,
+      user_id,
+      activo,
+      fecha_entrada,
+      fecha_salida,
+      salario,
+      telefono,
+      ciudad_operacion_id,
+      url_foto
+    FROM clientes_mensajeroaquitoy
+  
+  tipo_cliente: |
+    SELECT
+      tipo_cliente_id,
+      nombre,
+      descripcion
+    FROM tipo_cliente
   
   estado: |
-    INSERT INTO dim_estado (id_estado, estado_servicio)
-    SELECT t.id_estado, t.estado_servicio
-    FROM dim_estado_temp t
-    LEFT JOIN dim_estado d ON d.id_estado = t.id_estado
-    WHERE d.id_estado IS NULL
-    
-    ON CONFLICT (id_estado) DO UPDATE 
-    SET estado_servicio = EXCLUDED.estado_servicio;
+    SELECT
+      id AS estado_id,
+      nombre,
+      descripcion
+    FROM mensajeria_estado
   
-  novedad: |
-    INSERT INTO dim_novedad (id_novedad, descripcion_novedad, tipo)
-    SELECT t.id_novedad, t.descripcion_novedad, t.tipo
-    FROM dim_novedad_temp t
-    LEFT JOIN dim_novedad d ON d.id_novedad = t.id_novedad
-    WHERE d.id_novedad IS NULL
-    
-    ON CONFLICT (id_novedad) DO UPDATE 
-    SET descripcion_novedad = EXCLUDED.descripcion_novedad,
-        tipo = EXCLUDED.tipo;
+  tipo_novedad: |
+    SELECT
+      id AS tipo_novedad_id,
+      nombre
+    FROM mensajeria_tiponovedad
   
   tipo_servicio: |
-    INSERT INTO dim_tipo_servicio (id_tipo_servicio, tipo_servicio)
-    SELECT t.id_tipo_servicio, t.tipo_servicio
-    FROM dim_tipo_servicio_temp t
-    LEFT JOIN dim_tipo_servicio d ON d.id_tipo_servicio = t.id_tipo_servicio
-    WHERE d.id_tipo_servicio IS NULL
+    SELECT
+      id AS tipo_servicio_id,
+      nombre,
+      descripcion
+    FROM mensajeria_tiposervicio
+  
+  tipo_pago: |
+    SELECT
+      id AS tipo_pago_id,
+      nombre,
+      descripcion
+    FROM mensajeria_tipopago
+  
+  tipo_vehiculo: |
+    SELECT
+      id AS tipo_vehiculo_id,
+      nombre,
+      descripcion
+    FROM mensajeria_tipovehiculo
+  
+  origen_servicio: |
+    SELECT
+      id AS origen_id,
+      direccion,
+      cliente_id,
+      ciudad_id
+    FROM mensajeria_origenservicio
+  
+  destino_servicio: |
+    SELECT
+      id AS destino_id,
+      direccion,
+      cliente_id,
+      ciudad_id
+    FROM mensajeria_destinoservicio
+  
+  servicio: |
+    SELECT
+      id AS servicio_id,
+      descripcion,
+      nombre_solicitante,
+      fecha_solicitud,
+      hora_solicitud,
+      fecha_deseada,
+      hora_deseada,
+      nombre_recibe,
+      telefono_recibe,
+      descripcion_pago,
+      ida_y_regreso,
+      activo,
+      novedades,
+      cliente_id,
+      destino_id,
+      mensajero_id,
+      origen_id,
+      tipo_pago_id,
+      tipo_servicio_id,
+      tipo_vehiculo_id,
+      usuario_id,
+      prioridad,
+      ciudad_destino_id,
+      ciudad_origen_id,
+      hora_visto_por_mensajero,
+      visto_por_mensajero,
+      descripcion_multiples_origenes,
+      mensajero2_id,
+      mensajero3_id,
+      multiples_origenes,
+      asignar_mensajero,
+      es_prueba,
+      descripcion_cancelado
+    FROM mensajeria_servicio
     
-    ON CONFLICT (id_tipo_servicio) DO UPDATE 
-    SET tipo_servicio = EXCLUDED.tipo_servicio;
+  estados_servicio: |
+    SELECT
+      id,
+      fecha,
+      hora,
+      foto,
+      observaciones,
+      estado_id,
+      servicio_id,
+      es_prueba,
+      foto_binary
+    FROM mensajeria_estadosservicio
   
-  medio_pago: |
-    INSERT INTO dim_medio_pago (id_medio_pago, metodo_pago)
-    SELECT t.id_medio_pago, t.metodo_pago
-    FROM dim_medio_pago_temp t
-    LEFT JOIN dim_medio_pago d ON d.id_medio_pago = t.id_medio_pago
-    WHERE d.id_medio_pago IS NULL
+  novedades_servicio: |
+    SELECT
+      id,
+      fecha_novedad,
+      tipo_novedad_id,
+      descripcion,
+      servicio_id,
+      es_prueba,
+      mensajero_id
+    FROM mensajeria_novedadesservicio
+  
+  clientes_usuarioaquitoy: |
+      SELECT
+        id,
+        ciudad_id,
+        user_id,
+        telefono,
+        area_id,
+        cliente_id,
+        sede_id,
+        lider
+      FROM clientes_usuarioaquitoy
     
-    ON CONFLICT (id_medio_pago) DO UPDATE 
-    SET metodo_pago = EXCLUDED.metodo_pago;
+  mensajeroaquitoy_clientes: |
+    SELECT
+      id,
+      mensajeroaquitoy_id,
+      cliente_id
+    FROM clientes_mensajeroaquitoy_clientes
   
-  tiempo: |
-    INSERT INTO dim_tiempo (fecha, anio, mes, dia, dia_semana, hora)
-    SELECT t.fecha, t.anio, t.mes, t.dia, t.dia_semana, t.hora
-    FROM dim_tiempo_temp t
-    LEFT JOIN dim_tiempo d ON 
-        d.fecha = t.fecha AND 
-        d.hora = t.hora
-    WHERE d.id_tiempo IS NULL;
-  
-  geografia: |
-    INSERT INTO dim_geografia (ciudad_origen, ciudad_destino, distancia_aproximada)
-    SELECT t.ciudad_origen, t.ciudad_destino, t.distancia_aproximada
-    FROM dim_geografia_temp t
-    LEFT JOIN dim_geografia d ON 
-        d.ciudad_origen = t.ciudad_origen AND 
-        d.ciudad_destino = t.ciudad_destino
-    WHERE d.id_geografia IS NULL;
-  
-  tiempo_espera: |
-    INSERT INTO dim_tiempo_espera (categoria, rango_tiempo)
-    SELECT t.categoria, t.rango_tiempo
-    FROM dim_tiempo_espera_temp t
-    LEFT JOIN dim_tiempo_espera d ON 
-        d.categoria = t.categoria AND 
-        d.rango_tiempo = t.rango_tiempo
-    WHERE d.id_tiempo_espera IS NULL;
+  coordinador: |
+    SELECT
+      id,
+      user_id
+    FROM clientes_coordinador
 
-# Script para cargar la tabla de hechos
-load_fact_table: |
-  -- Eliminar registros existentes para evitar duplicados
-  DELETE FROM fact_servicios_mensajeria 
-  WHERE id_servicio IN (SELECT id_servicio FROM fact_servicios_mensajeria_temp);
+# Transformation configurations
+transform_dimensions:
   
-  -- Insertar nuevos registros
-  INSERT INTO fact_servicios_mensajeria (
-      id_servicio, id_cliente, id_sede, id_mensajero, id_tiempo, 
-      id_geografia, id_estado, id_novedad, id_tiempo_espera, 
-      id_tipo_servicio, id_medio_pago, tiempo_total_servicio, tiempo_por_fase, 
-      tiempo_espera, costo_servicio, descuentos_aplicados
-  )
-  SELECT 
-      id_servicio, id_cliente, id_sede, id_mensajero, id_tiempo, 
-      id_geografia, id_estado, id_novedad, id_tiempo_espera, 
-      id_tipo_servicio, id_medio_pago, tiempo_total_servicio, tiempo_por_fase, 
-      tiempo_espera, costo_servicio, descuentos_aplicados
-  FROM fact_servicios_mensajeria_temp;
+  dimcliente:
+    source_tables: [cliente]
+    sql: |
+      SELECT
+        NULL as dk_cliente,
+        c.id_cliente as id_cliente_bdo,
+        c.nit_cliente as nit_cliente,
+        c.nombre as nombre_cliente,
+        c.email as email,
+        c.direccion AS direccion,
+        c.telefono as telefono,
+        c.nombre_contacto as nombre_contacto,
+        c.ciudad_id as id_ciudad_bdo,
+        c.tipo_cliente_id as id_tipocliente_bdo,
+        c.activo as flag_activo,
+        CASE
+          WHEN c.coordinador_id IS NULL OR c.coordinador_id = 'NaN' THEN NULL
+          ELSE c.coordinador_id::INTEGER
+        END as id_coordinador,
+        c.sector as sector,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_cliente c
+      ORDER BY c.id_cliente ASC;
+
+  dimsede:
+    source_tables: [sede]
+    sql: |
+      SELECT
+        NULL as dk_sede,
+        s.sede_id as id_sede_bdo,
+        s.nombre as nombre_sede,
+        s.direccion as direccion,
+        s.telefono as telefono,
+        s.nombre_contacto as nombre_contacto,
+        s.ciudad_id as id_ciudad_bdo,
+        s.cliente_id as id_cliente_bdo,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_sede s
+      ORDER BY s.sede_id ASC;
+  
+  dimciudad:
+    source_tables: [ciudad, departamento]
+    sql: |
+      SELECT
+        NULL as dk_ciudad,
+        c.ciudad_id as id_ciudad_bdo,
+        c.nombre_ciudad as nombre_ciudad,
+        d.nombre as nombre_departamento,
+        d.departamento_id as id_departamento_bdo,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_ciudad c
+      JOIN temp_departamento d ON c.departamento_id = d.departamento_id
+      ORDER BY c.ciudad_id ASC;
+  
+  dimmensajero:
+    source_tables: [mensajero, ciudad]
+    sql: |
+      SELECT
+        NULL as dk_mensajero,
+        m.id as id_mensajero_bdo,
+        m.user_id as id_usuario,
+        m.activo as flag_activo,
+        m.fecha_entrada as fecha_entrada,
+        m.fecha_salida as fecha_salida,
+        m.salario as salario,
+        m.telefono as telefono,
+        m.ciudad_operacion_id as id_ciudad_bdo,
+        c.nombre_ciudad as nombre_ciudad_operacion,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_mensajero m
+      LEFT JOIN temp_ciudad c ON m.ciudad_operacion_id = c.ciudad_id
+      ORDER BY m.id ASC;
+
+  dimusuario:
+    source_tables: [clientes_usuarioaquitoy, area, cliente, sede, ciudad]
+    sql: |
+      SELECT
+        NULL as dk_usuario,
+        u.id as id_usuario_bdo,
+        u.user_id as id_user_sistema,
+        u.telefono as telefono,
+        u.area_id as id_area_bdo,
+        a.nombre as nombre_area,
+        u.cliente_id as id_cliente_bdo,
+        c.nombre as nombre_cliente,
+        u.sede_id as id_sede_bdo,
+        s.nombre as nombre_sede,
+        u.ciudad_id as id_ciudad_bdo,
+        ci.nombre_ciudad as nombre_ciudad,
+        u.lider as flag_lider,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_clientes_usuarioaquitoy u
+      LEFT JOIN temp_area a ON u.area_id = a.area_id
+      LEFT JOIN temp_cliente c ON u.cliente_id = c.id_cliente
+      LEFT JOIN temp_sede s ON u.sede_id = s.sede_id
+      LEFT JOIN temp_ciudad ci ON u.ciudad_id = ci.ciudad_id
+      ORDER BY u.id ASC;
+  
+  dimdireccion:
+    source_tables: [origen_servicio, destino_servicio, ciudad, departamento]
+    sql: |
+      -- Primero unimos orígenes
+      SELECT
+        NULL as dk_direccion,
+        CONCAT('O-', o.origen_id) as id_direccion_bdo,
+        o.direccion as direccion,
+        o.ciudad_id as id_ciudad_bdo,
+        c.nombre_ciudad as nombre_ciudad,
+        d.nombre as nombre_departamento,
+        'Origen' as tipo_direccion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_origen_servicio o
+      JOIN temp_ciudad c ON o.ciudad_id = c.ciudad_id
+      JOIN temp_departamento d ON c.departamento_id = d.departamento_id
+      
+      UNION ALL
+      
+      -- Luego unimos los destinos
+      SELECT
+        NULL as dk_direccion,
+        CONCAT('D-', dest.destino_id) as id_direccion_bdo,
+        dest.direccion as direccion,
+        dest.ciudad_id as id_ciudad_bdo,
+        c2.nombre_ciudad as nombre_ciudad,
+        d2.nombre as nombre_departamento,
+        'Destino' as tipo_direccion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_destino_servicio dest
+      JOIN temp_ciudad c2 ON dest.ciudad_id = c2.ciudad_id
+      JOIN temp_departamento d2 ON c2.departamento_id = d2.departamento_id
+      ORDER BY tipo_direccion ASC, nombre_ciudad ASC, nombre_departamento ASC;
+      
+  dimtipopago:
+    source_tables: [tipo_pago]
+    sql: |
+      SELECT
+        NULL as dk_tipopago,
+        tp.tipo_pago_id as id_tipopago_bdo,
+        tp.nombre as nombre_tipopago,
+        tp.descripcion as descripcion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_tipo_pago tp
+      ORDER BY tp.tipo_pago_id ASC;
+  
+  dimtipovehiculo:
+    source_tables: [tipo_vehiculo]
+    sql: |
+      SELECT
+        NULL as dk_tipovehiculo,
+        tv.tipo_vehiculo_id as id_tipovehiculo_bdo,
+        tv.nombre as nombre_tipovehiculo,
+        tv.descripcion as descripcion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_tipo_vehiculo tv
+      ORDER BY tv.tipo_vehiculo_id ASC;
+
+  dimtiponovedad:
+    source_tables: [tipo_novedad]
+    sql: |
+      SELECT
+        NULL as dk_tiponovedad,
+        tn.tipo_novedad_id as id_tiponovedad_bdo,
+        tn.nombre as nombre_tiponovedad,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_tipo_novedad tn
+      ORDER BY tn.tipo_novedad_id ASC;
+  
+  dimarea:
+    source_tables: [area]
+    sql: |
+      SELECT
+        NULL as dk_area,
+        a.area_id as id_area_bdo,
+        a.nombre as nombre_area,
+        a.descripcion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_area a
+      ORDER BY a.area_id ASC;
+  
+  dimtipocliente:
+    source_tables: [tipo_cliente]
+    sql: |
+      SELECT
+        NULL as dk_tipocliente,
+        tc.tipo_cliente_id as id_tipocliente_bdo,
+        tc.nombre as nombre_tipo_cliente,
+        tc.descripcion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_tipo_cliente tc
+      ORDER BY tc.tipo_cliente_id ASC;
+
+  dimtiempo:
+    source_tables: []  # Generated dimension
+    sql: |
+      SELECT
+        NULL as dk_tiempo,
+        datum as fecha_completa,
+        EXTRACT(YEAR FROM datum) as anio,
+        CASE
+          WHEN EXTRACT(MONTH FROM datum) <= 6 THEN 1
+          ELSE 2
+        END as semestre,
+        EXTRACT(QUARTER FROM datum) as trimestre,
+        EXTRACT(MONTH FROM datum) as mes,
+        EXTRACT(WEEK FROM datum) as semana,
+        EXTRACT(DAY FROM datum) as dia,
+        EXTRACT(DOW FROM datum) as dia_semana,
+        CASE
+          WHEN EXTRACT(DOW FROM datum) IN (0, 6) THEN TRUE
+          ELSE FALSE
+        END as es_fin_semana,
+        FALSE as es_feriado,  -- This would require a separate lookup table
+        EXTRACT(HOUR FROM datum) as hora,
+        EXTRACT(MINUTE FROM datum) as minuto,
+        CASE
+          WHEN EXTRACT(HOUR FROM datum) BETWEEN 5 AND 11 THEN 'Mañana'
+          WHEN EXTRACT(HOUR FROM datum) BETWEEN 12 AND 17 THEN 'Tarde'
+          ELSE 'Noche'
+        END as periodo_dia,
+        TO_CHAR(datum, 'YYYYMM')::integer as anio_mes,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_inicio_validez,
+        '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+        TRUE as flag_registro_actual,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM (
+        SELECT generate_series(
+          '{START_DATE}'::timestamp,
+          '{END_DATE}'::timestamp,
+          '1 minute'::interval
+        ) as datum
+      ) dates
+
+# Transformation Facts
+transform_facts:
+
+  fact_servicios:
+    source_tables: [servicio, estados_servicio]
+    sql: |
+      SELECT
+        NULL as sk_servicio,
+        s.servicio_id as id_servicio_bdo,
+        s.cliente_id as id_cliente_bdo,
+        s.usuario_id as id_usuario_bdo,
+        s.mensajero_id as id_mensajero_principal_bdo,
+        s.mensajero2_id as id_mensajero_secundario_bdo,
+        s.mensajero3_id as id_mensajero_terciario_bdo,
+        s.origen_id as id_direccion_origen_bdo,
+        s.destino_id as id_direccion_destino_bdo,
+        s.tipo_pago_id as id_tipopago_bdo,
+        s.tipo_vehiculo_id as id_tipovehiculo_bdo,
+        -- Construir claves para fechas con formato YYYYMMDDHH24MI
+        TO_CHAR(CONCAT(s.fecha_solicitud, ' ', s.hora_solicitud)::timestamp, 'YYYYMMDDHH24MI')::bigint as id_tiempo_solicitud,
+        TO_CHAR(CONCAT(s.fecha_deseada, ' ', s.hora_deseada)::timestamp, 'YYYYMMDDHH24MI')::bigint as id_tiempo_deseado,
+        -- Última actualización del servicio (último estado registrado)
+        (SELECT TO_CHAR(CONCAT(MAX(es.fecha), ' ', MAX(es.hora))::timestamp, 'YYYYMMDDHH24MI')::bigint
+          FROM temp_estados_servicio es 
+          WHERE es.servicio_id = s.servicio_id) as id_tiempo_ultima_actualizacion,
+          -- Estado actual del servicio
+          (SELECT e.nombre
+            FROM temp_estados_servicio es
+            JOIN temp_estado e ON es.estado_id = e.estado_id
+            WHERE es.servicio_id = s.servicio_id
+            ORDER BY es.fecha DESC, es.hora DESC
+            LIMIT 1) as estado_actual,
+          -- Tipo de servicio (no es dimensión)
+          (SELECT ts.nombre
+           FROM temp_tipo_servicio ts
+           WHERE ts.tipo_servicio_id = s.tipo_servicio_id) as tipo_servicio,
+          s.descripcion as descripcion_servicio,
+          s.nombre_solicitante as nombre_solicitante,
+          s.nombre_recibe as nombre_recibe,
+          s.telefono_recibe as telefono_recibe,
+          s.descripcion_pago as descripcion_pago,
+          s.ida_y_regreso as flag_ida_y_regreso,
+          s.prioridad as prioridad,
+          s.multiples_origenes as flag_multiples_origenes,
+          -- Tiempos calculados en minutos
+          CASE 
+            WHEN (SELECT COUNT(*) FROM temp_estados_servicio WHERE servicio_id = s.servicio_id) > 0 THEN
+                EXTRACT(EPOCH FROM 
+                  ((SELECT CONCAT(MAX(fecha), ' ', MAX(hora))::timestamp 
+                    FROM temp_estados_servicio 
+                    WHERE servicio_id = s.servicio_id) - 
+                    (CONCAT(s.fecha_solicitud, ' ', s.hora_solicitud)::timestamp)
+                    )) / 60
+            ELSE NULL
+          END as tiempo_total_servicio_minutos,
+          -- Tiempo de asignación (desde solicitud hasta primer estado de asignación)
+          CASE 
+            WHEN (SELECT COUNT(*) FROM temp_estados_servicio es 
+                    JOIN temp_estado e ON es.estado_id = e.estado_id 
+                    WHERE es.servicio_id = s.servicio_id AND e.nombre IN ('Con mensajero Asignado', 'Iniciado')) > 0 THEN
+                EXTRACT(EPOCH FROM 
+                  ((SELECT MIN(CONCAT(es.fecha, ' ', es.hora)::timestamp) 
+                    FROM temp_estados_servicio es
+                    JOIN temp_estado e ON es.estado_id = e.estado_id 
+                    WHERE es.servicio_id = s.servicio_id AND e.nombre IN ('Con mensajero Asignado', 'Iniciado')) - 
+                    (CONCAT(s.fecha_solicitud, ' ', s.hora_solicitud)::timestamp)
+                    )) / 60
+            ELSE NULL
+          END as tiempo_asignacion_minutos,
+          -- Tiempo de entrega (desde asignación hasta entregado)
+          CASE 
+            WHEN (SELECT COUNT(*) FROM temp_estados_servicio es 
+                   JOIN temp_estado e ON es.estado_id = e.estado_id 
+                   WHERE es.servicio_id = s.servicio_id AND e.nombre IN ('Entregado en destino', 'Terminado completo')) > 0 THEN
+              EXTRACT(EPOCH FROM 
+                ((SELECT MIN(CONCAT(es.fecha, ' ', es.hora)::timestamp) 
+                  FROM temp_estados_servicio es
+                  JOIN temp_estado e ON es.estado_id = e.estado_id 
+                  WHERE es.servicio_id = s.servicio_id AND e.nombre IN ('Entregado en destino', 'Terminado completo')) - 
+                  (SELECT MIN(CONCAT(es.fecha, ' ', es.hora)::timestamp) 
+                   FROM temp_estados_servicio es
+                   JOIN temp_estado e ON es.estado_id = e.estado_id 
+                   WHERE es.servicio_id = s.servicio_id AND e.nombre IN ('Con mensajero Asignado', 'Iniciado'))
+                  )) / 60
+            ELSE NULL
+          END as tiempo_entrega_minutos,
+          -- Indicadores de estado
+          CASE 
+            WHEN (SELECT COUNT(*) FROM temp_estados_servicio es 
+                    JOIN temp_estado e ON es.estado_id = e.estado_id 
+                    WHERE es.servicio_id = s.servicio_id AND e.nombre IN ('Entregado en destino', 'Terminado completo')) > 0 THEN TRUE
+            ELSE FALSE
+          END as flag_completado,
+          CASE 
+            WHEN (SELECT COUNT(*) FROM temp_estados_servicio es 
+                    JOIN temp_estado e ON es.estado_id = e.estado_id 
+                    WHERE es.servicio_id = s.servicio_id AND e.nombre = 'Con novedad') > 0 THEN TRUE
+            ELSE FALSE
+          END as flag_cancelado,
+          -- Información de audit
+          s.activo as flag_activo,
+          s.es_prueba as flag_es_prueba,
+          CURRENT_TIMESTAMP as fecha_creacion,
+          CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_servicio s
+      ORDER BY s.servicio_id ASC;
+      
+  fact_novedades:
+    source_tables: [novedades_servicio, tipo_novedad]
+    sql: |
+      SELECT
+        NULL AS sk_novedad,
+        n.id as id_novedad_bdo,
+        n.servicio_id as id_servicio_bdo,
+        TO_CHAR(n.fecha_novedad, 'YYYYMMDDHH24MI')::bigint as id_tiempo,
+        n.tipo_novedad_id as id_tiponovedad_bdo,
+        n.mensajero_id as id_mensajero_bdo,
+        n.descripcion as descripcion,
+        n.es_prueba as flag_es_prueba,
+        (SELECT tn.nombre FROM temp_tipo_novedad tn WHERE tn.tipo_novedad_id = n.tipo_novedad_id) as nombre_tipo_novedad,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_novedades_servicio n
+      ORDER BY n.id ASC;
+  
+  fact_estados_servicio:
+    source_tables: [estados_servicio, estado]
+    sql: |
+      WITH estados_duración AS (
+        SELECT 
+          es1.id, 
+          es1.servicio_id,
+          es1.estado_id,
+          CONCAT(es1.fecha, ' ', es1.hora)::timestamp as fecha_hora,
+          -- Calcula la duración hasta el siguiente estado (o hasta ahora si es el último)
+          CASE
+            WHEN LEAD(CONCAT(es2.fecha, ' ', es2.hora)::timestamp) OVER (PARTITION BY es1.servicio_id ORDER BY es1.fecha, es1.hora) IS NULL THEN
+              EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - CONCAT(es1.fecha, ' ', es1.hora)::timestamp)) / 60
+            ELSE
+              EXTRACT(EPOCH FROM (LEAD(CONCAT(es2.fecha, ' ', es2.hora)::timestamp) OVER (PARTITION BY es1.servicio_id ORDER BY es1.fecha, es1.hora) - CONCAT(es1.fecha, ' ', es1.hora)::timestamp)) / 60
+          END as duracion_minutos
+        FROM temp_estados_servicio es1
+        LEFT JOIN temp_estados_servicio es2 ON es1.servicio_id = es2.servicio_id
+      )
+      
+      SELECT
+        NULL AS sk_estado_servicio,
+        es.id as id_estado_servicio_bdo,
+        es.servicio_id as id_servicio_bdo,
+        TO_CHAR(CONCAT(es.fecha, ' ', es.hora)::timestamp, 'YYYYMMDDHH24MI')::bigint as id_tiempo,
+        (SELECT e.nombre FROM temp_estado e WHERE e.estado_id = es.estado_id) as estado_nombre,
+        es.observaciones as observaciones,
+        CASE WHEN es.foto IS NOT NULL OR es.foto_binary IS NOT NULL THEN TRUE ELSE FALSE END as flag_tiene_foto,
+        es.es_prueba as flag_es_prueba,
+        ed.duracion_minutos as duracion_estado_minutos,
+        CURRENT_TIMESTAMP as fecha_creacion,
+        CURRENT_TIMESTAMP as fecha_ultima_modificacion
+      FROM temp_estados_servicio es
+      JOIN estados_duración ed ON es.id = ed.id
+      ORDER BY es.servicio_id ASC, fecha_hora ASC;
+
+
+# Table creation scripts for dimensions and facts
+create_tables:
+
+  dimarea: |
+    CREATE TABLE IF NOT EXISTS dimarea(
+      dk_area SERIAL PRIMARY KEY,
+      id_area_bdo INTEGER NOT NULL,
+      nombre_area VARCHAR(255),
+      descripcion TEXT,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimarea_id_area_bdo ON dimarea(id_area_bdo);
+  
+  dimtipocliente: |
+    CREATE TABLE IF NOT EXISTS dimtipocliente(
+      dk_tipocliente SERIAL PRIMARY KEY,
+      id_tipocliente_bdo INTEGER NOT NULL,
+      nombre_tipo_cliente VARCHAR(255),
+      descripcion TEXT,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimtipocliente_id_tipocliente_bdo ON dimtipocliente(id_tipocliente_bdo);
+  
+  dimciudad: |
+    CREATE TABLE IF NOT EXISTS dimciudad (
+      dk_ciudad SERIAL PRIMARY KEY,
+      id_ciudad_bdo INTEGER NOT NULL,
+      nombre_ciudad VARCHAR(255),
+      nombre_departamento VARCHAR(255),
+      id_departamento_bdo INTEGER,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimciudad_id_ciudad_bdo ON dimciudad(id_ciudad_bdo);
+
+  dimcliente: |
+    CREATE TABLE IF NOT EXISTS dimcliente (
+      dk_cliente SERIAL PRIMARY KEY,
+      id_cliente_bdo INTEGER NOT NULL,
+      nit_cliente VARCHAR(50),
+      nombre_cliente VARCHAR(255),
+      email VARCHAR(255),
+      direccion VARCHAR(255),
+      telefono VARCHAR(50),
+      nombre_contacto VARCHAR(255),
+      id_ciudad_bdo INTEGER,
+      id_tipocliente_bdo INTEGER,
+      flag_activo BOOLEAN,
+      id_coordinador INTEGER,
+      sector VARCHAR(100),
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_dimcliente_id_cliente_bdo ON dimcliente(id_cliente_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimcliente_id_ciudad_bdo ON dimcliente(id_ciudad_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimcliente_id_tipocliente_bdo ON dimcliente(id_tipocliente_bdo);
+
+  dimsede: |
+    CREATE TABLE IF NOT EXISTS dimsede (
+      dk_sede SERIAL PRIMARY KEY,
+      id_sede_bdo INTEGER NOT NULL,
+      nombre_sede VARCHAR(255),
+      direccion VARCHAR(255),
+      telefono VARCHAR(50),
+      nombre_contacto VARCHAR(255),
+      id_ciudad_bdo INTEGER,
+      id_cliente_bdo INTEGER,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimsede_id_sede_bdo ON dimsede(id_sede_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimsede_id_ciudad_bdo ON dimsede(id_ciudad_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimsede_id_cliente_bdo ON dimsede(id_cliente_bdo);
+
+  dimmensajero: |
+    CREATE TABLE IF NOT EXISTS dimmensajero (
+      dk_mensajero SERIAL PRIMARY KEY,
+      id_mensajero_bdo INTEGER NOT NULL,
+      id_usuario INTEGER,
+      flag_activo BOOLEAN,
+      fecha_entrada DATE,
+      fecha_salida DATE,
+      salario NUMERIC(12,2),
+      telefono VARCHAR(50),
+      id_ciudad_bdo INTEGER,
+      nombre_ciudad_operacion VARCHAR(255),
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimmensajero_id_mensajero_bdo ON dimmensajero(id_mensajero_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimmensajero_id_ciudad_bdo ON dimmensajero(id_ciudad_bdo);
+
+  dimtiempo: |
+    CREATE TABLE IF NOT EXISTS dimtiempo (
+      dk_tiempo SERIAL PRIMARY KEY,
+      fecha_completa TIMESTAMP,
+      anio INTEGER,
+      semestre INTEGER,
+      trimestre INTEGER,
+      mes INTEGER,
+      semana INTEGER,
+      dia INTEGER,
+      dia_semana INTEGER,
+      es_fin_semana BOOLEAN,
+      es_feriado BOOLEAN,
+      hora INTEGER,
+      minuto INTEGER,
+      periodo_dia VARCHAR(20),
+      anio_mes INTEGER,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimtiempo_dk_tiempo ON dimtiempo(dk_tiempo);
+
+  dimusuario: |
+    CREATE TABLE IF NOT EXISTS dimusuario (
+      dk_usuario SERIAL PRIMARY KEY,
+      id_usuario_bdo INTEGER NOT NULL,
+      id_user_sistema INTEGER,
+      telefono VARCHAR(50),
+      id_area_bdo INTEGER,
+      nombre_area VARCHAR(255),
+      id_cliente_bdo INTEGER,
+      nombre_cliente VARCHAR(255),
+      id_sede_bdo INTEGER,
+      nombre_sede VARCHAR(255),
+      id_ciudad_bdo INTEGER,
+      nombre_ciudad VARCHAR(255),
+      flag_lider BOOLEAN,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimusuario_id_usuario_bdo ON dimusuario(id_usuario_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimusuario_id_cliente_bdo ON dimusuario(id_cliente_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimusuario_id_sede_bdo ON dimusuario(id_sede_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimusuario_id_ciudad_bdo ON dimusuario(id_ciudad_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimusuario_id_area_bdo ON dimusuario(id_area_bdo);
+
+  dimdireccion: |
+    CREATE TABLE IF NOT EXISTS dimdireccion (
+      dk_direccion SERIAL PRIMARY KEY,
+      id_direccion_bdo VARCHAR(50) NOT NULL,
+      direccion VARCHAR(255),
+      id_ciudad_bdo INTEGER,
+      nombre_ciudad VARCHAR(255),
+      nombre_departamento VARCHAR(255),
+      tipo_direccion VARCHAR(20),
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimdireccion_id_direccion_bdo ON dimdireccion(id_direccion_bdo);
+    CREATE INDEX IF NOT EXISTS idx_dimdireccion_id_ciudad_bdo ON dimdireccion(id_ciudad_bdo);
+
+  dimtipopago: |
+    CREATE TABLE IF NOT EXISTS dimtipopago (
+      dk_tipopago SERIAL PRIMARY KEY,
+      id_tipopago_bdo INTEGER NOT NULL,
+      nombre_tipopago VARCHAR(255),
+      descripcion TEXT,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimtipopago_id_tipopago_bdo ON dimtipopago(id_tipopago_bdo);
+  
+  dimtipovehiculo: |
+    CREATE TABLE IF NOT EXISTS dimtipovehiculo (
+      dk_tipovehiculo SERIAL PRIMARY KEY,
+      id_tipovehiculo_bdo INTEGER NOT NULL,
+      nombre_tipovehiculo VARCHAR(255),
+      descripcion TEXT,
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimtipovehiculo_id_tipovehiculo_bdo ON dimtipovehiculo(id_tipovehiculo_bdo);
+  
+  dimtiponovedad: |
+    CREATE TABLE IF NOT EXISTS dimtiponovedad (
+      dk_tiponovedad SERIAL PRIMARY KEY,
+      id_tiponovedad_bdo INTEGER NOT NULL,
+      nombre_tiponovedad VARCHAR(255),
+      fecha_creacion TIMESTAMP,
+      fecha_inicio_validez TIMESTAMP NOT NULL,
+      fecha_fin_validez TIMESTAMP NOT NULL,
+      flag_registro_actual BOOLEAN NOT NULL,
+      fecha_ultima_modificacion TIMESTAMP NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dimtiponovedad_id_tiponovedad_bdo ON dimtiponovedad(id_tiponovedad_bdo);
+
+
+  fact_servicios: |
+    CREATE TABLE IF NOT EXISTS fact_servicios (
+      sk_servicio SERIAL PRIMARY KEY,
+      id_servicio_bdo INTEGER,
+      dk_cliente INTEGER,
+      dk_usuario INTEGER,
+      dk_mensajero_principal INTEGER,
+      dk_mensajero_secundario INTEGER NULL,
+      dk_mensajero_terciario INTEGER NULL,
+      dk_direccion_origen INTEGER,
+      dk_direccion_destino INTEGER,
+      dk_tipopago INTEGER,
+      dk_tipovehiculo INTEGER,
+      id_tiempo_solicitud BIGINT,
+      id_tiempo_deseado BIGINT,
+      id_tiempo_ultima_actualizacion BIGINT,
+      estado_actual VARCHAR(100),
+      tipo_servicio VARCHAR(100),
+      descripcion_servicio TEXT,
+      nombre_solicitante VARCHAR(255),
+      nombre_recibe VARCHAR(255),
+      telefono_recibe VARCHAR(50),
+      descripcion_pago TEXT,
+      flag_ida_y_regreso BOOLEAN,
+      prioridad VARCHAR(100),
+      flag_multiples_origenes BOOLEAN,
+      tiempo_total_servicio_minutos NUMERIC(10, 2),
+      tiempo_asignacion_minutos NUMERIC(10, 2),
+      tiempo_entrega_minutos NUMERIC(10, 2),
+      flag_completado BOOLEAN,
+      flag_cancelado BOOLEAN,
+      flag_activo BOOLEAN,
+      flag_es_prueba BOOLEAN,
+      fecha_creacion TIMESTAMP,
+      fecha_ultima_modificacion TIMESTAMP,
+      FOREIGN KEY (dk_cliente) REFERENCES dimcliente(dk_cliente),
+      FOREIGN KEY (dk_usuario) REFERENCES dimusuario(dk_usuario),
+      FOREIGN KEY (dk_mensajero_principal) REFERENCES dimmensajero(dk_mensajero),
+      FOREIGN KEY (dk_mensajero_secundario) REFERENCES dimmensajero (dk_mensajero),
+      FOREIGN KEY (dk_mensajero_terciario) REFERENCES dimmensajero (dk_mensajero),
+      FOREIGN KEY (dk_direccion_origen) REFERENCES dimdireccion (dk_direccion),
+      FOREIGN KEY (dk_direccion_destino) REFERENCES dimdireccion (dk_direccion),
+      FOREIGN KEY (dk_tipopago) REFERENCES dimtipopago (dk_tipopago),
+      FOREIGN KEY (dk_tipovehiculo) REFERENCES dimtipovehiculo (dk_tipovehiculo)
+    );
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_dk_cliente ON fact_servicios(dk_cliente);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_dk_mensajero ON fact_servicios(dk_mensajero_principal);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_id_tiempo_sol ON fact_servicios(id_tiempo_solicitud);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_id_tiempo_des ON fact_servicios(id_tiempo_deseado);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_estado ON fact_servicios(estado_actual);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_tipo ON fact_servicios(tipo_servicio);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_completado ON fact_servicios(flag_completado);
+    CREATE INDEX IF NOT EXISTS idx_fact_servicios_cancelado ON fact_servicios(flag_cancelado);
+
+  fact_novedades: |
+    CREATE TABLE IF NOT EXISTS fact_novedades (
+      sk_novedad SERIAL PRIMARY KEY,
+      id_novedad_bdo INTEGER,
+      sk_servicio INTEGER,
+      id_tiempo BIGINT,
+      dk_tiponovedad INTEGER,
+      dk_mensajero INTEGER,
+      descripcion TEXT,
+      flag_es_prueba BOOLEAN,
+      nombre_tipo_novedad VARCHAR(100),
+      fecha_creacion TIMESTAMP,
+      fecha_ultima_modificacion TIMESTAMP,
+      FOREIGN KEY (sk_servicio) REFERENCES fact_servicios (sk_servicio),
+      FOREIGN KEY (dk_tiponovedad) REFERENCES dimtiponovedad (dk_tiponovedad),
+      FOREIGN KEY (dk_mensajero) REFERENCES dimmensajero (dk_mensajero)
+    );
+    CREATE INDEX IF NOT EXISTS idx_fact_novedades_servicio ON fact_novedades(sk_servicio);
+    CREATE INDEX IF NOT EXISTS idx_fact_novedades_id_tiempo ON fact_novedades(id_tiempo);
+    CREATE INDEX IF NOT EXISTS idx_fact_novedades_dk_tipo ON fact_novedades(dk_tiponovedad);
+    CREATE INDEX IF NOT EXISTS idx_fact_novedades_dk_mensajero ON fact_novedades(dk_mensajero);
+
+  fact_estados_servicio: |
+    CREATE TABLE IF NOT EXISTS fact_estados_servicio (
+      sk_estado_servicio SERIAL PRIMARY KEY,
+      id_estado_servicio_bdo INTEGER,
+      sk_servicio INTEGER,
+      id_tiempo BIGINT,
+      estado_nombre VARCHAR(100),
+      observaciones TEXT,
+      flag_tiene_foto BOOLEAN,
+      flag_es_prueba BOOLEAN,
+      duracion_estado_minutos NUMERIC(10, 2),
+      fecha_creacion TIMESTAMP,
+      fecha_ultima_modificacion TIMESTAMP,
+      FOREIGN KEY (sk_servicio) REFERENCES fact_servicios (sk_servicio)
+    );
+    CREATE INDEX IF NOT EXISTS idx_fact_estados_servicio ON fact_estados_servicio(id_estado_servicio_bdo);
+    CREATE INDEX IF NOT EXISTS idx_fact_estados_id_tiempo ON fact_estados_servicio(id_tiempo);
+    CREATE INDEX IF NOT EXISTS idx_fact_estados_nombre ON fact_estados_servicio(estado_nombre);
+
+
+
+dimension_tables:
+  dimarea:
+    business_keys: [id_area_bdo]
+  dimtipocliente:
+    business_keys: [id_tipocliente_bdo]
+  dimciudad:
+    business_keys: [id_ciudad_bdo]
+  dimcliente:
+    business_keys: [id_cliente_bdo]
+  dimsede:
+    business_keys: [id_sede_bdo]
+  dimmensajero:
+    business_keys: [id_mensajero_bdo]
+  dimtiempo:
+    business_keys: [fecha_completa]
+  dimusuario:
+    business_keys: [id_usuario_bdo]
+  dimdireccion:
+    business_keys: [id_direccion_bdo]
+  dimtipopago:
+    business_keys: [id_tipopago_bdo]
+  dimtipovehiculo:
+    business_keys: [id_tipovehiculo_bdo]
+  dimtiponovedad:
+    business_keys: [id_tiponovedad_bdo]
+
+fact_tables:
+  fact_servicios:
+    unique_columns:
+      - dk_cliente
+      - dk_usuario
+      - dk_mensajero_principal
+      - dk_direccion_origen
+      - dk_direccion_destino
+      - tipo_servicio
+      - fecha_creacion
+
+  fact_novedades:
+    unique_columns:
+      - sk_servicio
+      - dk_tiponovedad
+      - descripcion
+
+  fact_estados_servicio:
+    unique_columns:
+      - sk_servicio
+      - estado_nombre
+
+
+
+
+
+

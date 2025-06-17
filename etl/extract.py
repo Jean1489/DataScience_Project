@@ -1,140 +1,124 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
-Módulo para extraer datos de la base de datos origen.
+Data extraction module for ETL process
+Extracts data from source systems based on configuration
 """
-
-import psycopg2
-import pandas as pd
 import logging
+import pandas as pd
+from sqlalchemy import text
+from datetime import datetime, timedelta
 
-logger = logging.getLogger('ETL_Mensajeria.Extract')
+logger = logging.getLogger(__name__)
 
-class DataExtractor:
-    """Clase para extraer datos de la base de datos origen"""
+def extract_data(config):
+    """
+    Extract data from source systems
     
-    def __init__(self, config):
-        """Inicializa conexión a la base de datos origen"""
-        self.config = config
-        self.connection = self._connect()
-        self.dimension_queries = {
-            'cliente': """
-                SELECT 
-                    id_cliente, 
-                    nombre_cliente, 
-                    tipo_cliente, 
-                    industria
-                FROM clientes
-            """,
-            'sede': """
-                SELECT 
-                    id_sede, 
-                    nombre_sede, 
-                    ciudad, 
-                    direccion
-                FROM sedes
-            """,
-            'mensajero': """
-                SELECT 
-                    id_mensajero, 
-                    nombre as nombre_mensajero, 
-                    antiguedad, 
-                    puntuacion as puntuacion_servicio
-                FROM mensajeros
-            """,
-            'estado': """
-                SELECT 
-                    id_estado, 
-                    estado as estado_servicio
-                FROM estados
-            """,
-            'novedad': """
-                SELECT 
-                    id_novedad, 
-                    descripcion as descripcion_novedad, 
-                    tipo_novedad as tipo
-                FROM novedades
-            """,
-            'tipo_servicio': """
-                SELECT 
-                    id_tipo as id_tipo_servicio, 
-                    tipo as tipo_servicio
-                FROM tipos_servicio
-            """,
-            'medio_pago': """
-                SELECT 
-                    id_medio as id_medio_pago, 
-                    metodo as metodo_pago
-                FROM medios_pago
-            """
-        }
-        self.services_query = """
-            SELECT 
-                s.id_servicio, 
-                s.id_cliente, 
-                s.id_sede, 
-                s.id_mensajero,
-                s.fecha_hora_servicio,
-                s.ciudad_origen,
-                s.ciudad_destino,
-                s.estado_servicio,
-                s.id_novedad,
-                s.tiempo_espera,
-                s.tipo_servicio,
-                s.medio_pago,
-                s.tiempo_total,
-                s.tiempo_fase1,
-                s.tiempo_fase2,
-                s.tiempo_fase3,
-                s.costo_servicio,
-                s.descuento
-            FROM 
-                servicios s
-        """
+    Args:
+        config (dict): ETL configuration
+        
+    Returns:
+        dict: Dictionary containing extracted dataframes
+    """
+    logger.info("Starting data extraction")
+    extracted_data = {}
     
-    def _connect(self):
-        """Establece conexión con la base de datos origen"""
-        try:
-            conn = psycopg2.connect(
-                host=self.config['host'],
-                database=self.config['database'],
-                user=self.config['user'],
-                password=self.config['password'],
-                port=self.config['port']
-            )
-            logger.info(f"Conexión exitosa a la base de datos origen: {self.config['database']}")
-            return conn
-        except Exception as e:
-            logger.error(f"Error al conectar a la base de datos origen: {e}")
-            raise
-    
-    def extract_dimension(self, dimension):
-        """Extrae datos para una dimensión específica"""
-        try:
-            if dimension not in self.dimension_queries:
-                raise ValueError(f"No existe consulta definida para dimensión: {dimension}")
+    try:
+        source_engine = config['source']['engine']
+        warehouse_engine = config['warehouse']['engine']
+        
+        # Extract data for each table defined in SQL scripts
+        for table_name, query in config['sql_scripts']['extract'].items():
+            logger.info(f"Extracting data for {table_name}")
             
-            query = self.dimension_queries[dimension]
-            df = pd.read_sql(query, self.connection)
-            logger.info(f"Extracción de dimensión {dimension} completada: {len(df)} registros")
-            return df
-        except Exception as e:
-            logger.error(f"Error al extraer dimensión {dimension}: {e}")
-            raise
+            # Apply date parameters if needed
+            query = apply_date_parameters(query)
+            
+            # Execute the query and load into a DataFrame
+            with source_engine.connect() as conn:
+                df = pd.read_sql(text(query), conn)
+                
+            logger.info(f"Extracted {len(df)} rows for {table_name}")
+            extracted_data[table_name] = df
+        
+        return extracted_data
     
-    def extract_services(self):
-        """Extrae datos de servicios para la tabla de hechos"""
-        try:
-            df = pd.read_sql(self.services_query, self.connection)
-            logger.info(f"Extracción de servicios completada: {len(df)} registros")
-            return df
-        except Exception as e:
-            logger.error(f"Error al extraer servicios: {e}")
-            raise
+    except Exception as e:
+        logger.error(f"Error during data extraction: {str(e)}", exc_info=True)
+        raise
+
+def apply_date_parameters(query):
+    """
+    Apply date parameters to a query
     
-    def close_connection(self):
-        """Cierra la conexión a la base de datos"""
-        if self.connection:
-            self.connection.close()
-            logger.info("Conexión a base de datos origen cerrada")
+    Args:
+        query (str): SQL query with date parameters
+        
+    Returns:
+        str: SQL query with date parameters replaced
+    """
+    # Get current date and time
+    now = datetime.now()
+    
+    # Define common date parameters
+    date_params = {
+        "{CURRENT_DATE}": now.strftime("%Y-%m-%d"),
+        "{YESTERDAY}": (now - timedelta(days=1)).strftime("%Y-%m-%d"),
+        "{CURRENT_MONTH_START}": now.replace(day=1).strftime("%Y-%m-%d"),
+        "{PREVIOUS_MONTH_START}": (now.replace(day=1) - timedelta(days=1)).replace(day=1).strftime("%Y-%m-%d"),
+        "{PREVIOUS_MONTH_END}": (now.replace(day=1) - timedelta(days=1)).strftime("%Y-%m-%d"),
+        "{CURRENT_YEAR}": str(now.year),
+        "{PREVIOUS_YEAR}": str(now.year - 1)
+    }
+    
+    # Replace parameters in query
+    for param, value in date_params.items():
+        query = query.replace(param, value)
+    
+    return query
+
+def extract_incremental_data(source_engine, table_name, id_column, last_loaded_id):
+    """
+    Extract data incrementally based on ID
+    
+    Args:
+        source_engine: SQLAlchemy engine for source database
+        table_name (str): Source table name
+        id_column (str): ID column name
+        last_loaded_id: Last loaded ID value
+        
+    Returns:
+        DataFrame: Extracted data
+    """
+    query = f"""
+    SELECT * FROM {table_name}
+    WHERE {id_column} > {last_loaded_id}
+    ORDER BY {id_column}
+    """
+    
+    with source_engine.connect() as conn:
+        df = pd.read_sql(text(query), conn)
+    
+    return df
+
+def get_last_loaded_id(warehouse_engine, tracking_table, source_table):
+    """
+    Get the last loaded ID for a specific source table
+    
+    Args:
+        warehouse_engine: SQLAlchemy engine for warehouse database
+        tracking_table (str): Table tracking ETL loads
+        source_table (str): Source table name
+        
+    Returns:
+        int: Last loaded ID
+    """
+    query = f"""
+    SELECT MAX(last_id) AS last_id 
+    FROM {tracking_table}
+    WHERE source_table = '{source_table}'
+    """
+    
+    with warehouse_engine.connect() as conn:
+        result = conn.execute(text(query)).fetchone()
+        
+    return result.last_id if result and result.last_id else 0

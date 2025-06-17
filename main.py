@@ -1,106 +1,75 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
-Proceso ETL principal para Data Warehouse de Servicios de Mensajería.
-Este script orquesta el flujo completo de ETL conectando las operaciones
-de extracción, transformación y carga.
+ETL orchestrator for the Messaging Services Data Warehouse
+This script orchestrates the ETL process, running extraction, transformation and loading
 """
-
-import os
 import logging
-import yaml
-import datetime
-from etl.extract import DataExtractor
-from etl.transform import DataTransformer
-from etl.load import DataLoader
+import os
+import sys
+from datetime import datetime
 
-# Configuración de logging
+from etl.extract import extract_data
+from etl.transform import transform_data
+from etl.load import load_data
+from etl.config import load_config
+
+# Crear directorio para logs si no existe
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+
+# Definir ruta del archivo de log
+log_filename = os.path.join(log_dir, f"etl_run_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+
+# Configurar logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='etl_mensajeria.log'
+    handlers=[
+        logging.FileHandler(log_filename),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
-logger = logging.getLogger('ETL_Mensajeria')
+logger = logging.getLogger(__name__)
 
-def load_config(config_file):
-    """Carga configuración desde archivo YAML"""
+def run_etl(config_dir="config"):
+    """
+    Main ETL process that orchestrates extraction, transformation and loading
+    """
     try:
-        with open(config_file, 'r') as file:
-            return yaml.safe_load(file)
-    except Exception as e:
-        logger.error(f"Error al cargar configuración desde {config_file}: {e}")
-        raise
-
-def load_sql_scripts(sql_file):
-    """Carga scripts SQL desde archivo YAML"""
-    try:
-        with open(sql_file, 'r') as file:
-            return yaml.safe_load(file)
-    except Exception as e:
-        logger.error(f"Error al cargar scripts SQL desde {sql_file}: {e}")
-        raise
-
-def main():
-    """Función principal que ejecuta el proceso ETL completo"""
-    start_time = datetime.datetime.now()
-    logger.info(f"Iniciando proceso ETL: {start_time}")
-    
-    try:
-        # Cargar configuraciones
-        source_config = load_config('config/source_db.yml')
-        warehouse_config = load_config('config/warehouse_db.yml')
-        sql_scripts = load_sql_scripts('config/sqlscripts.yml')
+        start_time = datetime.now()
+        logger.info(f"Starting ETL process at {start_time}")
         
-        # Inicializar componentes ETL
-        extractor = DataExtractor(source_config)
-        transformer = DataTransformer()
-        loader = DataLoader(warehouse_config, sql_scripts)
+        # Load configuration
+        logger.info("Loading configuration files")
+        config = load_config(config_dir)
         
-        # Crear esquema del warehouse si no existe
-        loader.create_warehouse_schema()
+        # Extract data from source systems
+        logger.info("Starting data extraction")
+        extracted_data = extract_data(config)
+        logger.info(f"Extraction completed. Extracted {len(extracted_data)} datasets")
         
-        # ETL para dimensiones
-        dimensions = [
-            'cliente', 'sede', 'mensajero', 'estado', 
-            'novedad', 'tipo_servicio', 'medio_pago'
-        ]
+        # Transform the extracted data
+        logger.info("Starting data transformation")
+        transformed_data = transform_data(extracted_data, config)
+        logger.info("Transformation completed")
         
-        for dim in dimensions:
-            # Extraer datos para dimensión
-            raw_data = extractor.extract_dimension(dim)
-            
-            # Transformar datos
-            transformed_data = transformer.transform_dimension(raw_data, dim)
-            
-            # Cargar dimensión
-            loader.load_dimension(transformed_data, dim)
+        # Load data into the data warehouse
+        logger.info("Starting data loading to warehouse")
+        load_results = load_data(transformed_data, config)
+        logger.info("Data loading completed")
         
-        # ETL para tabla de hechos
-        # 1. Extraer datos de servicios
-        raw_services = extractor.extract_services()
-        
-        # 2. Transformar datos y generar dimensiones derivadas
-        transformed_data = transformer.transform_services(raw_services)
-        
-        # 3. Cargar dimensiones derivadas (tiempo, geografía, tiempo_espera)
-        loader.load_derived_dimensions(transformed_data)
-        
-        # 4. Cargar tabla de hechos
-        loader.load_fact_table(transformed_data)
-        
-        # Cerrar conexiones
-        extractor.close_connection()
-        loader.close_connection()
-        
-        end_time = datetime.datetime.now()
+        # Log completion statistics
+        end_time = datetime.now()
         duration = end_time - start_time
-        logger.info(f"Proceso ETL completado. Duración: {duration}")
-        print(f"ETL ejecutado correctamente. Ver detalles en el log 'etl_mensajeria.log'")
+        logger.info(f"ETL process completed successfully at {end_time}")
+        logger.info(f"Total duration: {duration}")
+        logger.info(f"Loaded {load_results['rows_loaded']} rows across {load_results['tables_loaded']} tables")
         
+        return True
+    
     except Exception as e:
-        logger.error(f"Error en proceso ETL: {e}")
-        print(f"Error durante ETL: {e}")
+        logger.error(f"ETL process failed with error: {str(e)}", exc_info=True)
+        return False
 
 if __name__ == "__main__":
-    main()
+    success = run_etl()
+    sys.exit(0 if success else 1)
