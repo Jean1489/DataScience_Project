@@ -40,6 +40,12 @@ Este sistema permite:
 - PostgreSQL / SQLite (opcional para bodega)
 - Jupyter Notebooks o Streamlit (para visualización)
 
+
+## 📈 Resultados Esperados
+
+La implementación del sistema debe permitir a la empresa tomar decisiones basadas en evidencia, mejorando tiempos de respuesta, asignación de mensajeros, relación con clientes y eficiencia general del servicio.
+
+
 ## 👨‍💻 Integrantes del Equipo
 
 - **Yhan Carlos Trujillo Castro** - Código: 2026415  
