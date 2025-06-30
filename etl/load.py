@@ -92,6 +92,7 @@ def load_dimension_table(table_name, df, engine, metadata, config):
     try:
         # Define the table if it doesn't exist
         table_exists = inspect(engine).has_table(table_name)
+        #logger.info(f"Checking if table {table_name} exists: {table_exists}")
         if not table_exists:
             create_dimension_table(table_name, engine, metadata, config)
             with engine.connect() as conn:
@@ -102,6 +103,7 @@ def load_dimension_table(table_name, df, engine, metadata, config):
 
         #Get business keys for this dimension
         business_keys = get_dimension_business_keys(table_name, config)
+        #print(f"Business keys for {table_name}: {business_keys}")
         pk_column = get_table_primary_key(table_name)
 
 
@@ -111,8 +113,8 @@ def load_dimension_table(table_name, df, engine, metadata, config):
                 for _, row in df.iterrows():
                     # Check if record exists using business keys
                     existing_record = check_dimension_exists(conn, table_name, row, business_keys)
+                    #logger.info(f"Checking existing record in {table_name} for business keys: {[row[key] for key in business_keys if key in row]}")
                     if existing_record:
-                        logger.debug(f"Ingresé al cambio")
                         if has_dimension_changed(conn, table_name, row, existing_record, business_keys):
                             expire_current_record(conn, table_name, existing_record[pk_column])
                             insert_new_dimension_record (conn, table_name, row, exclude_pk = True)
@@ -226,8 +228,8 @@ def check_dimension_exists(conn, table_name, row, business_keys):
             where_conditions.append(f"{key_pascal} = :{key}")
             params[key] = row[key]
         elif key_pascal in row and row[key_pascal] is not None:
-            where_conditions.append(f"{key_pascal} = :{key}")
-            params[key] = row[key_pascal]
+            where_conditions.append(f"{key} = :{key}")
+            params[key] = row.get(key) or row.get(normalize_column_name(key))
     
     if not where_conditions:
         return None
@@ -270,8 +272,8 @@ def check_fact_exists(conn, table_name, row, unique_columns):
             where_conditions.append(f"{key_pascal} = :{key}")
             params[key] = row[key]
         elif key_pascal in row and row[key_pascal] is not None:
-            where_conditions.append(f"{key_pascal} = :{key}")
-            params[key] = row[key_pascal]
+            where_conditions.append(f"{key} = :{key}")
+            params[key] = row.get(key) or row.get(normalize_column_name(key))
     
     if not where_conditions:
         return None
@@ -435,33 +437,26 @@ def get_dimension_business_keys(table_name, config):
     """
     Get business key columns that identify unique dimension records
     """
-    dim_config = config.get('dimension_tables', {}).get(table_name, {})
-    business_keys = dim_config.get('business_keys', [])
+    # Buscar en dimension_tables por el nombre de la tabla
+    dimension_tables = config['sql_scripts'].get('dimension_tables', {})
+    #print(dimension_tables)
     
-    if not business_keys:
-        # Common business key patterns
-        common_keys = ['codigo', 'nombre', 'code', 'name', 'id_externo', 'external_id']
-        business_keys = common_keys
-    
-    return business_keys
+    if table_name in dimension_tables:
+        return dimension_tables[table_name].get('business_keys', [])
+    else:
+        return []
 
 def get_fact_table_unique_columns(table_name, config):
     """
     Get columns that make a fact record unique
     """
-    fact_config = config.get('fact_tables', {}).get(table_name, {})
-    unique_columns = fact_config.get('unique_columns', [])
-    
-    if not unique_columns:
-        # Common unique column patterns for facts
-        common_unique = [
-            'fecha', 'id_cliente', 'id_producto', 'id_sucursal',
-            'date', 'customer_id', 'product_id', 'store_id',
-            'timestamp', 'transaction_id'
-        ]
-        unique_columns = common_unique
-    
-    return unique_columns
+    fact_tables = config['sql_scripts'].get('fact_tables', {})
+    #print(fact_tables)
+
+    if table_name in fact_tables:
+        return fact_tables[table_name].get('unique_columns', [])
+    else:
+        return []
 
 def normalize_dataframe_columns(df):
     """

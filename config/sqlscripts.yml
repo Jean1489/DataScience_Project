@@ -903,24 +903,16 @@ dimension_tables:
 fact_tables:
   fact_servicios:
     unique_columns:
-      - dk_cliente
-      - dk_usuario
-      - dk_mensajero_principal
-      - dk_direccion_origen
-      - dk_direccion_destino
-      - tipo_servicio
-      - fecha_creacion
+    - id_servicio_bdo
+
 
   fact_novedades:
     unique_columns:
-      - sk_servicio
-      - dk_tiponovedad
-      - descripcion
+    - id_novedad_bdo
 
   fact_estados_servicio:
     unique_columns:
-      - sk_servicio
-      - estado_nombre
+    - id_estado_servicio_bdo
 
 
 
