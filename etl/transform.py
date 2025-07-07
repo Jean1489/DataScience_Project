@@ -378,6 +378,7 @@ def transform_dimtiempo(extracted_data, config, last_run_timestamp=None):
     # Create dataframe con nombres en minúsculas
     df = pd.DataFrame({
         #'dk_tiempo': date_range.strftime('%Y%m%d%H').astype(int),
+        'id_fecha_completa': date_range.strftime('%Y%m%d%H').astype('int64'),
         'fecha_completa': date_range,
         'anio': date_range.year,
         'semestre': ((date_range.quarter - 1) // 2 + 1),
@@ -402,6 +403,7 @@ def transform_dimtiempo(extracted_data, config, last_run_timestamp=None):
     
     # Add SCD Type 2 fields
     current_datetime = datetime.now()
+    df['fecha_creacion'] = current_datetime
     df['fecha_inicio_validez'] = current_datetime
     df['fecha_fin_validez'] = pd.Timestamp.max
     df['flag_registro_actual'] = True
@@ -541,7 +543,7 @@ def transform_fact_servicios(extracted_data, transformed_data, config):
     fact_servicios['id_tipopago_bdo'] = result['tipo_pago_id']
     fact_servicios['id_tipovehiculo_bdo'] = result['tipo_vehiculo_id']
     
-    # Time dimension keys (format YYYYMMDDHH24MI) with safe formatting
+    # Time dimension keys (format YYYYMMDDHH) - MODIFICACIÓN: Solo horas, sin minutos
     fact_servicios['id_tiempo_solicitud'] = format_datetime_for_key(result['fecha_hora_solicitud'])
     fact_servicios['id_tiempo_deseado'] = format_datetime_for_key(result['fecha_hora_deseada'])
     fact_servicios['id_tiempo_ultima_actualizacion'] = format_datetime_for_key(result['ultima_actualizacion'])
@@ -658,13 +660,14 @@ def safe_datetime_conversion(fecha_series, hora_series, column_name="datetime"):
     logger.error(f"Returning NaT series for {column_name}")
     return pd.Series([pd.NaT] * len(fecha_series), index=fecha_series.index)
 
-def format_datetime_for_key(datetime_series, format_str='%Y%m%d%H%M'):
+def format_datetime_for_key(datetime_series, format_str='%Y%m%d%H'):
     """
     Safely format datetime series to string keys, handling NaT values
+    MODIFICACIÓN: Cambiado el formato de '%Y%m%d%H%M' a '%Y%m%d%H' para solo mostrar horas
     
     Args:
         datetime_series: pandas Series with datetime values
-        format_str: strftime format string
+        format_str: strftime format string (default: '%Y%m%d%H' - solo horas)
         
     Returns:
         pandas Series with formatted strings (or None for NaT values)
