@@ -1,6 +1,26 @@
-# Configuración del Data Warehouse
+# Database configuration for data warehouse
+# This configuration file defines the connection parameters for the data warehouse database
+
+# Database connection parameters
+driver: postgresql
 host: localhost
-database: warehouse_mensajeria
-user: postgres
-password: your_password
 port: 5432
+database: wareHouse
+user: postgres
+password: 
+
+# Connection pool settings
+pool_size: 10
+max_overflow: 20
+pool_timeout: 30
+pool_recycle: 3600
+
+# Data loading settings
+batch_size: 1000  # Number of rows to insert in a single batch
+tracking_table: ETL_Tracking  # Table name for tracking ETL runs
+retry_attempts: 3  # Number of retries for failed loads
+retry_delay: 5  # Seconds to wait between retries
+
+# Schema settings
+fact_schema: public
+dim_schema: public

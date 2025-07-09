@@ -518,38 +518,43 @@ transform_facts:
   fact_estados_servicio:
     source_tables: [estados_servicio, estado]
     sql: |
-      WITH estados_duración AS (
+      WITH estados_duracion AS (
         SELECT 
-          es1.id, 
-          es1.servicio_id,
-          es1.estado_id,
-          CONCAT(es1.fecha, ' ', es1.hora)::timestamp as fecha_hora,
-          -- Calcula la duración hasta el siguiente estado (o hasta ahora si es el último)
+          es.id, 
+          es.servicio_id,
+          es.estado_id,
+          es.fecha,
+          es.hora,
+          es.observaciones,
+          es.foto,
+          es.foto_binary,
+          es.es_prueba,
+          CONCAT(es.fecha, ' ', es.hora)::timestamp as fecha_hora,
+          -- Calcula la duracion hasta el siguiente estado (o hasta ahora si es el ultimo)
           CASE
-            WHEN LEAD(CONCAT(es2.fecha, ' ', es2.hora)::timestamp) OVER (PARTITION BY es1.servicio_id ORDER BY es1.fecha, es1.hora) IS NULL THEN
-              EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - CONCAT(es1.fecha, ' ', es1.hora)::timestamp)) / 60
+            WHEN LEAD(CONCAT(es.fecha, ' ', es.hora)::timestamp) OVER (PARTITION BY es.servicio_id ORDER BY es.fecha, es.hora) IS NULL THEN
+              EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - CONCAT(es.fecha, ' ', es.hora)::timestamp)) / 60
             ELSE
-              EXTRACT(EPOCH FROM (LEAD(CONCAT(es2.fecha, ' ', es2.hora)::timestamp) OVER (PARTITION BY es1.servicio_id ORDER BY es1.fecha, es1.hora) - CONCAT(es1.fecha, ' ', es1.hora)::timestamp)) / 60
+              EXTRACT(EPOCH FROM (LEAD(CONCAT(es.fecha, ' ', es.hora)::timestamp) OVER (PARTITION BY es.servicio_id ORDER BY es.fecha, es.hora) - CONCAT(es.fecha, ' ', es.hora)::timestamp)) / 60
           END as duracion_minutos
-        FROM temp_estados_servicio es1
-        LEFT JOIN temp_estados_servicio es2 ON es1.servicio_id = es2.servicio_id
+        FROM temp_estados_servicio es
       )
       
       SELECT
         NULL AS sk_estado_servicio,
-        es.id as id_estado_servicio_bdo,
-        es.servicio_id as id_servicio_bdo,
-        TO_CHAR(CONCAT(es.fecha, ' ', es.hora)::timestamp, 'YYYYMMDDHH24MI')::bigint as id_tiempo,
-        (SELECT e.nombre FROM temp_estado e WHERE e.estado_id = es.estado_id) as estado_nombre,
-        es.observaciones as observaciones,
-        CASE WHEN es.foto IS NOT NULL OR es.foto_binary IS NOT NULL THEN TRUE ELSE FALSE END as flag_tiene_foto,
-        es.es_prueba as flag_es_prueba,
+        ed.id as id_estado_servicio_bdo,
+        ed.servicio_id as id_servicio_bdo,
+        TO_CHAR(ed.fecha_hora, 'YYYYMMDDHH24MI')::bigint as id_tiempo,
+        e.nombre as estado_nombre,
+        ed.observaciones as observaciones,
+        CASE WHEN ed.foto IS NOT NULL OR ed.foto_binary IS NOT NULL THEN TRUE ELSE FALSE END as flag_tiene_foto,
+        ed.es_prueba as flag_es_prueba,
         ed.duracion_minutos as duracion_estado_minutos,
         CURRENT_TIMESTAMP as fecha_creacion,
         CURRENT_TIMESTAMP as fecha_ultima_modificacion
-      FROM temp_estados_servicio es
-      JOIN estados_duración ed ON es.id = ed.id
-      ORDER BY es.servicio_id ASC, fecha_hora ASC;
+      FROM estados_duracion ed
+      JOIN temp_estado e ON e.estado_id = ed.estado_id
+      ORDER BY ed.id ASC, ed.fecha_hora ASC;
 
 
 # Table creation scripts for dimensions and facts
@@ -668,6 +673,7 @@ create_tables:
   dimtiempo: |
     CREATE TABLE IF NOT EXISTS dimtiempo (
       dk_tiempo SERIAL PRIMARY KEY,
+      id_fecha_completa BIGINT UNIQUE,
       fecha_completa TIMESTAMP,
       anio INTEGER,
       semestre INTEGER,

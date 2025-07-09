@@ -1,6 +1,22 @@
-# Configuración de la base de datos origen
+# Database configuration for source system
+# This configuration file defines the connection parameters for the operational database
+
+# Database connection parameters
+driver: postgresql
 host: localhost
-database: db_source
-user: postgres
-password: your_password
 port: 5432
+database: prueba
+user: postgres
+password:   
+
+# Connection pool settings
+pool_size: 10
+max_overflow: 20
+pool_timeout: 30
+pool_recycle: 3600
+
+# Query timeout settings
+query_timeout: 300  # seconds
+
+# Other settings
+schema: public

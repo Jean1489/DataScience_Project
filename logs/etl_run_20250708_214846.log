@@ -1,0 +1,485 @@
+2025-07-08 21:48:46,322 - __main__ - INFO - Starting ETL process at 2025-07-08 21:48:46.322078
+2025-07-08 21:48:46,323 - __main__ - INFO - Loading configuration files
+2025-07-08 21:48:46,740 - __main__ - INFO - Starting data extraction
+2025-07-08 21:48:46,740 - etl.extract - INFO - Starting data extraction
+2025-07-08 21:48:46,741 - etl.extract - INFO - Extracting data for cliente
+2025-07-08 21:48:47,288 - etl.extract - INFO - Extracted 27 rows for cliente
+2025-07-08 21:48:47,289 - etl.extract - INFO - Extracting data for sede
+2025-07-08 21:48:47,303 - etl.extract - INFO - Extracted 52 rows for sede
+2025-07-08 21:48:47,303 - etl.extract - INFO - Extracting data for area
+2025-07-08 21:48:47,313 - etl.extract - INFO - Extracted 80 rows for area
+2025-07-08 21:48:47,314 - etl.extract - INFO - Extracting data for ciudad
+2025-07-08 21:48:47,322 - etl.extract - INFO - Extracted 19 rows for ciudad
+2025-07-08 21:48:47,323 - etl.extract - INFO - Extracting data for departamento
+2025-07-08 21:48:47,331 - etl.extract - INFO - Extracted 4 rows for departamento
+2025-07-08 21:48:47,331 - etl.extract - INFO - Extracting data for mensajero
+2025-07-08 21:48:47,344 - etl.extract - INFO - Extracted 50 rows for mensajero
+2025-07-08 21:48:47,344 - etl.extract - INFO - Extracting data for tipo_cliente
+2025-07-08 21:48:47,349 - etl.extract - INFO - Extracted 2 rows for tipo_cliente
+2025-07-08 21:48:47,350 - etl.extract - INFO - Extracting data for estado
+2025-07-08 21:48:47,360 - etl.extract - INFO - Extracted 6 rows for estado
+2025-07-08 21:48:47,360 - etl.extract - INFO - Extracting data for tipo_novedad
+2025-07-08 21:48:47,368 - etl.extract - INFO - Extracted 2 rows for tipo_novedad
+2025-07-08 21:48:47,368 - etl.extract - INFO - Extracting data for tipo_servicio
+2025-07-08 21:48:47,379 - etl.extract - INFO - Extracted 4 rows for tipo_servicio
+2025-07-08 21:48:47,379 - etl.extract - INFO - Extracting data for tipo_pago
+2025-07-08 21:48:47,386 - etl.extract - INFO - Extracted 7 rows for tipo_pago
+2025-07-08 21:48:47,387 - etl.extract - INFO - Extracting data for tipo_vehiculo
+2025-07-08 21:48:47,395 - etl.extract - INFO - Extracted 4 rows for tipo_vehiculo
+2025-07-08 21:48:47,396 - etl.extract - INFO - Extracting data for origen_servicio
+2025-07-08 21:48:47,414 - etl.extract - INFO - Extracted 741 rows for origen_servicio
+2025-07-08 21:48:47,415 - etl.extract - INFO - Extracting data for destino_servicio
+2025-07-08 21:48:47,434 - etl.extract - INFO - Extracted 1588 rows for destino_servicio
+2025-07-08 21:48:47,435 - etl.extract - INFO - Extracting data for servicio
+2025-07-08 21:48:47,949 - etl.extract - INFO - Extracted 28430 rows for servicio
+2025-07-08 21:48:47,950 - etl.extract - INFO - Extracting data for estados_servicio
+2025-07-08 21:48:51,662 - etl.extract - INFO - Extracted 128402 rows for estados_servicio
+2025-07-08 21:48:51,662 - etl.extract - INFO - Extracting data for novedades_servicio
+2025-07-08 21:48:51,825 - etl.extract - INFO - Extracted 5208 rows for novedades_servicio
+2025-07-08 21:48:51,825 - etl.extract - INFO - Extracting data for clientes_usuarioaquitoy
+2025-07-08 21:48:51,841 - etl.extract - INFO - Extracted 255 rows for clientes_usuarioaquitoy
+2025-07-08 21:48:51,842 - etl.extract - INFO - Extracting data for mensajeroaquitoy_clientes
+2025-07-08 21:48:51,855 - etl.extract - INFO - Extracted 307 rows for mensajeroaquitoy_clientes
+2025-07-08 21:48:51,856 - etl.extract - INFO - Extracting data for coordinador
+2025-07-08 21:48:51,864 - etl.extract - INFO - Extracted 3 rows for coordinador
+2025-07-08 21:48:51,865 - __main__ - INFO - Extraction completed. Extracted 20 datasets
+2025-07-08 21:48:51,865 - __main__ - INFO - Starting data transformation
+2025-07-08 21:48:51,866 - etl.transform - INFO - Starting data transformation
+2025-07-08 21:48:51,866 - etl.transform - INFO - Transforming dimarea
+2025-07-08 21:48:51,867 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:51,868 - etl.transform - INFO - Creating temporary table: temp_area
+2025-07-08 21:48:52,407 - etl.transform - INFO - Created temp table temp_area with 80 rows
+2025-07-08 21:48:52,410 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_area,
+  a.area_id as id_area_bdo,
+  a.nombre as nombre_area,
+  a.descripcion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_area a
+ORDER BY a.area_id ASC;
+
+2025-07-08 21:48:52,561 - etl.transform - INFO - SQL execution returned 80 rows
+2025-07-08 21:48:52,563 - etl.transform - INFO - Transforming dimtipocliente
+2025-07-08 21:48:52,565 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:52,567 - etl.transform - INFO - Creating temporary table: temp_tipo_cliente
+2025-07-08 21:48:52,707 - etl.transform - INFO - Created temp table temp_tipo_cliente with 2 rows
+2025-07-08 21:48:52,708 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_tipocliente,
+  tc.tipo_cliente_id as id_tipocliente_bdo,
+  tc.nombre as nombre_tipo_cliente,
+  tc.descripcion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_tipo_cliente tc
+ORDER BY tc.tipo_cliente_id ASC;
+
+2025-07-08 21:48:52,725 - etl.transform - INFO - SQL execution returned 2 rows
+2025-07-08 21:48:52,726 - etl.transform - INFO - Transforming dimciudad
+2025-07-08 21:48:52,727 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:52,728 - etl.transform - INFO - Creating temporary table: temp_ciudad
+2025-07-08 21:48:52,802 - etl.transform - INFO - Created temp table temp_ciudad with 19 rows
+2025-07-08 21:48:52,803 - etl.transform - INFO - Creating temporary table: temp_departamento
+2025-07-08 21:48:52,867 - etl.transform - INFO - Created temp table temp_departamento with 4 rows
+2025-07-08 21:48:52,867 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_ciudad,
+  c.ciudad_id as id_ciudad_bdo,
+  c.nombre_ciudad as nombre_ciudad,
+  d.nombre as nombre_departamento,
+  d.departamento_id as id_departamento_bdo,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_ciudad c
+JOIN temp_departamento d ON c.departamento_id = d.departamento_id
+ORDER BY c.ciudad_id ASC;
+
+2025-07-08 21:48:52,881 - etl.transform - INFO - SQL execution returned 19 rows
+2025-07-08 21:48:52,882 - etl.transform - INFO - Transforming dimcliente
+2025-07-08 21:48:52,883 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:52,885 - etl.transform - INFO - Creating temporary table: temp_cliente
+2025-07-08 21:48:52,953 - etl.transform - INFO - Created temp table temp_cliente with 27 rows
+2025-07-08 21:48:52,953 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_cliente,
+  c.id_cliente as id_cliente_bdo,
+  c.nit_cliente as nit_cliente,
+  c.nombre as nombre_cliente,
+  c.email as email,
+  c.direccion AS direccion,
+  c.telefono as telefono,
+  c.nombre_contacto as nombre_contacto,
+  c.ciudad_id as id_ciudad_bdo,
+  c.tipo_cliente_id as id_tipocliente_bdo,
+  c.activo as flag_activo,
+  CASE
+    WHEN c.coordinador_id IS NULL OR c.coordinador_id = 'NaN' THEN NULL
+    ELSE c.coordinador_id::INTEGER
+  END as id_coordinador,
+  c.sector as sector,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_cliente c
+ORDER BY c.id_cliente ASC;
+
+2025-07-08 21:48:52,965 - etl.transform - INFO - SQL execution returned 27 rows
+2025-07-08 21:48:52,966 - etl.transform - INFO - Transforming dimsede
+2025-07-08 21:48:52,967 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:52,967 - etl.transform - INFO - Creating temporary table: temp_sede
+2025-07-08 21:48:53,039 - etl.transform - INFO - Created temp table temp_sede with 52 rows
+2025-07-08 21:48:53,040 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_sede,
+  s.sede_id as id_sede_bdo,
+  s.nombre as nombre_sede,
+  s.direccion as direccion,
+  s.telefono as telefono,
+  s.nombre_contacto as nombre_contacto,
+  s.ciudad_id as id_ciudad_bdo,
+  s.cliente_id as id_cliente_bdo,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_sede s
+ORDER BY s.sede_id ASC;
+
+2025-07-08 21:48:53,056 - etl.transform - INFO - SQL execution returned 52 rows
+2025-07-08 21:48:53,057 - etl.transform - INFO - Transforming dimmensajero
+2025-07-08 21:48:53,057 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:53,058 - etl.transform - INFO - Creating temporary table: temp_mensajero
+2025-07-08 21:48:53,119 - etl.transform - INFO - Created temp table temp_mensajero with 50 rows
+2025-07-08 21:48:53,120 - etl.transform - INFO - Creating temporary table: temp_ciudad
+2025-07-08 21:48:53,162 - etl.transform - INFO - Created temp table temp_ciudad with 19 rows
+2025-07-08 21:48:53,163 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_mensajero,
+  m.id as id_mensajero_bdo,
+  m.user_id as id_usuario,
+  m.activo as flag_activo,
+  m.fecha_entrada as fecha_entrada,
+  m.fecha_salida as fecha_salida,
+  m.salario as salario,
+  m.telefono as telefono,
+  m.ciudad_operacion_id as id_ciudad_bdo,
+  c.nombre_ciudad as nombre_ciudad_operacion,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_mensajero m
+LEFT JOIN temp_ciudad c ON m.ciudad_operacion_id = c.ciudad_id
+ORDER BY m.id ASC;
+
+2025-07-08 21:48:53,174 - etl.transform - INFO - SQL execution returned 50 rows
+2025-07-08 21:48:53,175 - etl.transform - INFO - Transforming dimtiempo
+2025-07-08 21:48:53,175 - etl.transform - INFO - Generating DimTiempo incrementally
+2025-07-08 21:48:54,749 - etl.transform - INFO - Transforming dimusuario
+2025-07-08 21:48:54,750 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:54,751 - etl.transform - INFO - Creating temporary table: temp_clientes_usuarioaquitoy
+2025-07-08 21:48:54,826 - etl.transform - INFO - Created temp table temp_clientes_usuarioaquitoy with 255 rows
+2025-07-08 21:48:54,826 - etl.transform - INFO - Creating temporary table: temp_area
+2025-07-08 21:48:54,883 - etl.transform - INFO - Created temp table temp_area with 80 rows
+2025-07-08 21:48:54,884 - etl.transform - INFO - Creating temporary table: temp_cliente
+2025-07-08 21:48:54,945 - etl.transform - INFO - Created temp table temp_cliente with 27 rows
+2025-07-08 21:48:54,946 - etl.transform - INFO - Creating temporary table: temp_sede
+2025-07-08 21:48:55,004 - etl.transform - INFO - Created temp table temp_sede with 52 rows
+2025-07-08 21:48:55,004 - etl.transform - INFO - Creating temporary table: temp_ciudad
+2025-07-08 21:48:55,052 - etl.transform - INFO - Created temp table temp_ciudad with 19 rows
+2025-07-08 21:48:55,053 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_usuario,
+  u.id as id_usuario_bdo,
+  u.user_id as id_user_sistema,
+  u.telefono as telefono,
+  u.area_id as id_area_bdo,
+  a.nombre as nombre_area,
+  u.cliente_id as id_cliente_bdo,
+  c.nombre as nombre_cliente,
+  u.sede_id as id_sede_bdo,
+  s.nombre as nombre_sede,
+  u.ciudad_id as id_ciudad_bdo,
+  ci.nombre_ciudad as nombre_ciudad,
+  u.lider as flag_lider,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_clientes_usuarioaquitoy u
+LEFT JOIN temp_area a ON u.area_id = a.area_id
+LEFT JOIN temp_cliente c ON u.cliente_id = c.id_cliente
+LEFT JOIN temp_sede s ON u.sede_id = s.sede_id
+LEFT JOIN temp_ciudad ci ON u.ciudad_id = ci.ciudad_id
+ORDER BY u.id ASC;
+
+2025-07-08 21:48:55,090 - etl.transform - INFO - SQL execution returned 255 rows
+2025-07-08 21:48:55,092 - etl.transform - INFO - Transforming dimdireccion
+2025-07-08 21:48:55,094 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:55,096 - etl.transform - INFO - Creating temporary table: temp_origen_servicio
+2025-07-08 21:48:55,168 - etl.transform - INFO - Created temp table temp_origen_servicio with 741 rows
+2025-07-08 21:48:55,168 - etl.transform - INFO - Creating temporary table: temp_destino_servicio
+2025-07-08 21:48:55,259 - etl.transform - INFO - Created temp table temp_destino_servicio with 1588 rows
+2025-07-08 21:48:55,260 - etl.transform - INFO - Creating temporary table: temp_ciudad
+2025-07-08 21:48:55,316 - etl.transform - INFO - Created temp table temp_ciudad with 19 rows
+2025-07-08 21:48:55,316 - etl.transform - INFO - Creating temporary table: temp_departamento
+2025-07-08 21:48:55,369 - etl.transform - INFO - Created temp table temp_departamento with 4 rows
+2025-07-08 21:48:55,370 - etl.transform - INFO - Executing SQL: -- Primero unimos orígenes
+SELECT
+  NULL as dk_direccion,
+  CONCAT('O-', o.origen_id) as id_direccion_bdo,
+  o.direccion as direccion,
+  o.ciudad_id as id_ciudad_bdo,
+  c.nombre_ciudad as nombre_ciudad,
+  d.nombre as nombre_departamento,
+  'Origen' as tipo_direccion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_origen_servicio o
+JOIN temp_ciudad c ON o.ciudad_id = c.ciudad_id
+JOIN temp_departamento d ON c.departamento_id = d.departamento_id
+
+UNION ALL
+
+-- Luego unimos los destinos
+SELECT
+  NULL as dk_direccion,
+  CONCAT('D-', dest.destino_id) as id_direccion_bdo,
+  dest.direccion as direccion,
+  dest.ciudad_id as id_ciudad_bdo,
+  c2.nombre_ciudad as nombre_ciudad,
+  d2.nombre as nombre_departamento,
+  'Destino' as tipo_direccion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_destino_servicio dest
+JOIN temp_ciudad c2 ON dest.ciudad_id = c2.ciudad_id
+JOIN temp_departamento d2 ON c2.departamento_id = d2.departamento_id
+ORDER BY tipo_direccion ASC, nombre_ciudad ASC, nombre_departamento ASC;
+
+2025-07-08 21:48:55,823 - etl.transform - INFO - SQL execution returned 2329 rows
+2025-07-08 21:48:55,825 - etl.transform - INFO - Transforming dimtipopago
+2025-07-08 21:48:55,825 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:55,826 - etl.transform - INFO - Creating temporary table: temp_tipo_pago
+2025-07-08 21:48:55,896 - etl.transform - INFO - Created temp table temp_tipo_pago with 7 rows
+2025-07-08 21:48:55,897 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_tipopago,
+  tp.tipo_pago_id as id_tipopago_bdo,
+  tp.nombre as nombre_tipopago,
+  tp.descripcion as descripcion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_tipo_pago tp
+ORDER BY tp.tipo_pago_id ASC;
+
+2025-07-08 21:48:55,911 - etl.transform - INFO - SQL execution returned 7 rows
+2025-07-08 21:48:55,912 - etl.transform - INFO - Transforming dimtipovehiculo
+2025-07-08 21:48:55,913 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:55,914 - etl.transform - INFO - Creating temporary table: temp_tipo_vehiculo
+2025-07-08 21:48:55,980 - etl.transform - INFO - Created temp table temp_tipo_vehiculo with 4 rows
+2025-07-08 21:48:55,981 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_tipovehiculo,
+  tv.tipo_vehiculo_id as id_tipovehiculo_bdo,
+  tv.nombre as nombre_tipovehiculo,
+  tv.descripcion as descripcion,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_tipo_vehiculo tv
+ORDER BY tv.tipo_vehiculo_id ASC;
+
+2025-07-08 21:48:55,995 - etl.transform - INFO - SQL execution returned 4 rows
+2025-07-08 21:48:55,996 - etl.transform - INFO - Transforming dimtiponovedad
+2025-07-08 21:48:55,997 - etl.transform - INFO - Available source tables: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:55,998 - etl.transform - INFO - Creating temporary table: temp_tipo_novedad
+2025-07-08 21:48:56,091 - etl.transform - INFO - Created temp table temp_tipo_novedad with 2 rows
+2025-07-08 21:48:56,094 - etl.transform - INFO - Executing SQL: SELECT
+  NULL as dk_tiponovedad,
+  tn.tipo_novedad_id as id_tiponovedad_bdo,
+  tn.nombre as nombre_tiponovedad,
+  CURRENT_TIMESTAMP as fecha_inicio_validez,
+  '9999-12-31 23:59:59'::timestamp as fecha_fin_validez,
+  TRUE as flag_registro_actual,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_tipo_novedad tn
+ORDER BY tn.tipo_novedad_id ASC;
+
+2025-07-08 21:48:56,112 - etl.transform - INFO - SQL execution returned 2 rows
+2025-07-08 21:48:56,115 - etl.transform - INFO - Transforming fact_servicios
+2025-07-08 21:48:56,116 - etl.transform - INFO - Transforming fact_servicios with optimized pandas logic
+2025-07-08 21:48:56,151 - etl.transform - INFO - Processing 28430 services
+2025-07-08 21:48:56,200 - etl.transform - INFO - Converting estados_servicio_fecha_hora with 128402 records
+2025-07-08 21:48:57,402 - etl.transform - INFO - Successfully converted estados_servicio_fecha_hora using mixed format
+2025-07-08 21:48:57,409 - etl.transform - INFO - Converting servicio_fecha_hora_solicitud with 28430 records
+2025-07-08 21:48:57,643 - etl.transform - INFO - Successfully converted servicio_fecha_hora_solicitud using mixed format
+2025-07-08 21:48:57,645 - etl.transform - INFO - Converting servicio_fecha_hora_deseada with 28430 records
+2025-07-08 21:48:57,818 - etl.transform - WARNING - Mixed format failed for servicio_fecha_hora_deseada: Out of bounds nanosecond timestamp: 0004-02-01 16:46:52, at position 262
+2025-07-08 21:48:57,882 - etl.transform - INFO - Coerce conversion for servicio_fecha_hora_deseada: 28424 successful, 6 failed
+2025-07-08 21:48:57,883 - etl.transform - WARNING - Examples of failed servicio_fecha_hora_deseada conversions: ['0004-02-01 16:46:52', '0024-02-10 06:37:14', '0024-02-13 09:09:11', '9024-02-19 07:51:42', '0024-02-23 21:12:58']
+2025-07-08 21:48:57,886 - etl.transform - INFO - Calculating service states aggregations...
+2025-07-08 21:48:58,162 - etl.transform - INFO - Building final fact table structure...
+2025-07-08 21:48:59,025 - etl.transform - INFO - Calculating time metrics...
+2025-07-08 21:48:59,193 - etl.transform - INFO - Generated 28430 rows for fact_servicios
+2025-07-08 21:48:59,253 - etl.transform - INFO - Transforming fact_novedades
+2025-07-08 21:48:59,255 - etl.transform - INFO - Available source tables for fact transformation: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:48:59,256 - etl.transform - INFO - Available dimension tables: ['dimarea', 'dimtipocliente', 'dimciudad', 'dimcliente', 'dimsede', 'dimmensajero', 'dimtiempo', 'dimusuario', 'dimdireccion', 'dimtipopago', 'dimtipovehiculo', 'dimtiponovedad']
+2025-07-08 21:48:59,257 - etl.transform - INFO - Creating temporary table for fact: temp_novedades_servicio
+2025-07-08 21:48:59,765 - etl.transform - INFO - Created temp table temp_novedades_servicio with 5208 rows
+2025-07-08 21:48:59,765 - etl.transform - INFO - Creating temporary table for fact: temp_tipo_novedad
+2025-07-08 21:48:59,778 - etl.transform - INFO - Created temp table temp_tipo_novedad with 2 rows
+2025-07-08 21:48:59,779 - etl.transform - INFO - Creating temporary table for dimension: temp_dimarea
+2025-07-08 21:48:59,807 - etl.transform - INFO - Created temp dimension table temp_dimarea with 80 rows
+2025-07-08 21:48:59,808 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtipocliente
+2025-07-08 21:48:59,822 - etl.transform - INFO - Created temp dimension table temp_dimtipocliente with 2 rows
+2025-07-08 21:48:59,823 - etl.transform - INFO - Creating temporary table for dimension: temp_dimciudad
+2025-07-08 21:48:59,844 - etl.transform - INFO - Created temp dimension table temp_dimciudad with 19 rows
+2025-07-08 21:48:59,844 - etl.transform - INFO - Creating temporary table for dimension: temp_dimcliente
+2025-07-08 21:48:59,869 - etl.transform - INFO - Created temp dimension table temp_dimcliente with 27 rows
+2025-07-08 21:48:59,869 - etl.transform - INFO - Creating temporary table for dimension: temp_dimsede
+2025-07-08 21:48:59,895 - etl.transform - INFO - Created temp dimension table temp_dimsede with 52 rows
+2025-07-08 21:48:59,896 - etl.transform - INFO - Creating temporary table for dimension: temp_dimmensajero
+2025-07-08 21:48:59,922 - etl.transform - INFO - Created temp dimension table temp_dimmensajero with 50 rows
+2025-07-08 21:48:59,923 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtiempo
+2025-07-08 21:49:09,125 - etl.transform - INFO - Created temp dimension table temp_dimtiempo with 48382 rows
+2025-07-08 21:49:09,126 - etl.transform - INFO - Creating temporary table for dimension: temp_dimusuario
+2025-07-08 21:49:09,194 - etl.transform - INFO - Created temp dimension table temp_dimusuario with 255 rows
+2025-07-08 21:49:09,195 - etl.transform - INFO - Creating temporary table for dimension: temp_dimdireccion
+2025-07-08 21:49:09,477 - etl.transform - INFO - Created temp dimension table temp_dimdireccion with 2329 rows
+2025-07-08 21:49:09,478 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtipopago
+2025-07-08 21:49:09,493 - etl.transform - INFO - Created temp dimension table temp_dimtipopago with 7 rows
+2025-07-08 21:49:09,493 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtipovehiculo
+2025-07-08 21:49:09,510 - etl.transform - INFO - Created temp dimension table temp_dimtipovehiculo with 4 rows
+2025-07-08 21:49:09,510 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtiponovedad
+2025-07-08 21:49:09,523 - etl.transform - INFO - Created temp dimension table temp_dimtiponovedad with 2 rows
+2025-07-08 21:49:09,523 - etl.transform - INFO - Executing fact SQL: SELECT
+  NULL AS sk_novedad,
+  n.id as id_novedad_bdo,
+  n.servicio_id as id_servicio_bdo,
+  TO_CHAR(n.fecha_novedad, 'YYYYMMDDHH24MI')::bigint as id_tiempo,
+  n.tipo_novedad_id as id_tiponovedad_bdo,
+  n.mensajero_id as id_mensajero_bdo,
+  n.descripcion as descripcion,
+  n.es_prueba as flag_es_prueba,
+  (SELECT tn.nombre FROM temp_tipo_novedad tn WHERE tn.tipo_novedad_id = n.tipo_novedad_id) as nombre_tipo_novedad,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM temp_novedades_servicio n
+ORDER BY n.id ASC;
+
+2025-07-08 21:49:09,752 - etl.transform - INFO - SQL execution returned 5208 rows for fact table
+2025-07-08 21:49:09,812 - etl.transform - INFO - Transforming fact_estados_servicio
+2025-07-08 21:49:09,813 - etl.transform - INFO - Available source tables for fact transformation: ['cliente', 'sede', 'area', 'ciudad', 'departamento', 'mensajero', 'tipo_cliente', 'estado', 'tipo_novedad', 'tipo_servicio', 'tipo_pago', 'tipo_vehiculo', 'origen_servicio', 'destino_servicio', 'servicio', 'estados_servicio', 'novedades_servicio', 'clientes_usuarioaquitoy', 'mensajeroaquitoy_clientes', 'coordinador']
+2025-07-08 21:49:09,814 - etl.transform - INFO - Available dimension tables: ['dimarea', 'dimtipocliente', 'dimciudad', 'dimcliente', 'dimsede', 'dimmensajero', 'dimtiempo', 'dimusuario', 'dimdireccion', 'dimtipopago', 'dimtipovehiculo', 'dimtiponovedad']
+2025-07-08 21:49:09,815 - etl.transform - INFO - Creating temporary table for fact: temp_estados_servicio
+2025-07-08 21:49:59,592 - etl.transform - INFO - Created temp table temp_estados_servicio with 128402 rows
+2025-07-08 21:49:59,593 - etl.transform - INFO - Creating temporary table for fact: temp_estado
+2025-07-08 21:49:59,621 - etl.transform - INFO - Created temp table temp_estado with 6 rows
+2025-07-08 21:49:59,622 - etl.transform - INFO - Creating temporary table for dimension: temp_dimarea
+2025-07-08 21:49:59,657 - etl.transform - INFO - Created temp dimension table temp_dimarea with 80 rows
+2025-07-08 21:49:59,658 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtipocliente
+2025-07-08 21:49:59,679 - etl.transform - INFO - Created temp dimension table temp_dimtipocliente with 2 rows
+2025-07-08 21:49:59,680 - etl.transform - INFO - Creating temporary table for dimension: temp_dimciudad
+2025-07-08 21:49:59,708 - etl.transform - INFO - Created temp dimension table temp_dimciudad with 19 rows
+2025-07-08 21:49:59,709 - etl.transform - INFO - Creating temporary table for dimension: temp_dimcliente
+2025-07-08 21:49:59,739 - etl.transform - INFO - Created temp dimension table temp_dimcliente with 27 rows
+2025-07-08 21:49:59,740 - etl.transform - INFO - Creating temporary table for dimension: temp_dimsede
+2025-07-08 21:49:59,780 - etl.transform - INFO - Created temp dimension table temp_dimsede with 52 rows
+2025-07-08 21:49:59,781 - etl.transform - INFO - Creating temporary table for dimension: temp_dimmensajero
+2025-07-08 21:49:59,818 - etl.transform - INFO - Created temp dimension table temp_dimmensajero with 50 rows
+2025-07-08 21:49:59,819 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtiempo
+2025-07-08 21:50:09,343 - etl.transform - INFO - Created temp dimension table temp_dimtiempo with 48382 rows
+2025-07-08 21:50:09,344 - etl.transform - INFO - Creating temporary table for dimension: temp_dimusuario
+2025-07-08 21:50:09,414 - etl.transform - INFO - Created temp dimension table temp_dimusuario with 255 rows
+2025-07-08 21:50:09,416 - etl.transform - INFO - Creating temporary table for dimension: temp_dimdireccion
+2025-07-08 21:50:09,755 - etl.transform - INFO - Created temp dimension table temp_dimdireccion with 2329 rows
+2025-07-08 21:50:09,755 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtipopago
+2025-07-08 21:50:09,773 - etl.transform - INFO - Created temp dimension table temp_dimtipopago with 7 rows
+2025-07-08 21:50:09,773 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtipovehiculo
+2025-07-08 21:50:09,804 - etl.transform - INFO - Created temp dimension table temp_dimtipovehiculo with 4 rows
+2025-07-08 21:50:09,805 - etl.transform - INFO - Creating temporary table for dimension: temp_dimtiponovedad
+2025-07-08 21:50:09,822 - etl.transform - INFO - Created temp dimension table temp_dimtiponovedad with 2 rows
+2025-07-08 21:50:09,823 - etl.transform - INFO - Executing fact SQL: WITH estados_duracion AS (
+  SELECT 
+    es.id, 
+    es.servicio_id,
+    es.estado_id,
+    es.fecha,
+    es.hora,
+    es.observaciones,
+    es.foto,
+    es.foto_binary,
+    es.es_prueba,
+    CONCAT(es.fecha, ' ', es.hora)::timestamp as fecha_hora,
+    -- Calcula la duracion hasta el siguiente estado (o hasta ahora si es el ultimo)
+    CASE
+      WHEN LEAD(CONCAT(es.fecha, ' ', es.hora)::timestamp) OVER (PARTITION BY es.servicio_id ORDER BY es.fecha, es.hora) IS NULL THEN
+        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - CONCAT(es.fecha, ' ', es.hora)::timestamp)) / 60
+      ELSE
+        EXTRACT(EPOCH FROM (LEAD(CONCAT(es.fecha, ' ', es.hora)::timestamp) OVER (PARTITION BY es.servicio_id ORDER BY es.fecha, es.hora) - CONCAT(es.fecha, ' ', es.hora)::timestamp)) / 60
+    END as duracion_minutos
+  FROM temp_estados_servicio es
+)
+
+SELECT
+  NULL AS sk_estado_servicio,
+  ed.id as id_estado_servicio_bdo,
+  ed.servicio_id as id_servicio_bdo,
+  TO_CHAR(ed.fecha_hora, 'YYYYMMDDHH24MI')::bigint as id_tiempo,
+  e.nombre as estado_nombre,
+  ed.observaciones as observaciones,
+  CASE WHEN ed.foto IS NOT NULL OR ed.foto_binary IS NOT NULL THEN TRUE ELSE FALSE END as flag_tiene_foto,
+  ed.es_prueba as flag_es_prueba,
+  ed.duracion_minutos as duracion_estado_minutos,
+  CURRENT_TIMESTAMP as fecha_creacion,
+  CURRENT_TIMESTAMP as fecha_ultima_modificacion
+FROM estados_duracion ed
+JOIN temp_estado e ON e.estado_id = ed.estado_id
+ORDER BY ed.id ASC, ed.fecha_hora ASC;
+
+2025-07-08 21:50:18,881 - etl.transform - INFO - SQL execution returned 128402 rows for fact table
+2025-07-08 21:50:18,987 - __main__ - INFO - Transformation completed
+2025-07-08 21:50:18,987 - __main__ - INFO - Starting data loading to warehouse
+2025-07-08 21:50:18,988 - etl.load - INFO - Starting data loading
+2025-07-08 21:50:19,540 - etl.load - INFO - Dimension dimarea: 0 loaded, 0 updated, 80 skipped
+2025-07-08 21:50:19,557 - etl.load - INFO - Dimension dimtipocliente: 0 loaded, 0 updated, 2 skipped
+2025-07-08 21:50:19,597 - etl.load - INFO - Dimension dimciudad: 0 loaded, 0 updated, 19 skipped
+2025-07-08 21:50:19,659 - etl.load - INFO - Dimension dimcliente: 0 loaded, 0 updated, 27 skipped
+2025-07-08 21:50:19,748 - etl.load - INFO - Dimension dimsede: 0 loaded, 0 updated, 52 skipped
+2025-07-08 21:50:19,814 - etl.load - INFO - Dimension dimmensajero: 0 loaded, 0 updated, 50 skipped
+2025-07-08 22:03:46,713 - etl.load - INFO - Dimension dimtiempo: 31 loaded, 0 updated, 48351 skipped
+2025-07-08 22:03:46,997 - etl.load - INFO - Dimension dimusuario: 0 loaded, 0 updated, 255 skipped
+2025-07-08 22:03:49,498 - etl.load - INFO - Dimension dimdireccion: 0 loaded, 0 updated, 2329 skipped
+2025-07-08 22:03:49,515 - etl.load - INFO - Dimension dimtipopago: 0 loaded, 0 updated, 7 skipped
+2025-07-08 22:03:49,531 - etl.load - INFO - Dimension dimtipovehiculo: 0 loaded, 0 updated, 4 skipped
+2025-07-08 22:03:49,544 - etl.load - INFO - Dimension dimtiponovedad: 0 loaded, 0 updated, 2 skipped
+2025-07-08 22:03:49,545 - etl.load - INFO - Ejecutando mapeo para fact_servicios
+2025-07-08 22:07:16,472 - etl.load - INFO - Fact fact_servicios: 0 loaded, 0 updated, 28430 skipped
+2025-07-08 22:07:16,472 - etl.load - INFO - Ejecutando mapeo para fact_novedades
+2025-07-08 22:07:27,050 - etl.load - INFO - Fact fact_novedades: 0 loaded, 0 updated, 5208 skipped
+2025-07-08 22:07:27,052 - etl.load - INFO - Ejecutando mapeo para fact_estados_servicios
+2025-07-08 22:09:38,834 - etl.load - INFO - Fact fact_estados_servicio: 0 loaded, 0 updated, 128402 skipped
+2025-07-08 22:09:38,921 - __main__ - INFO - Data loading completed
+2025-07-08 22:09:38,921 - __main__ - INFO - ETL process completed successfully at 2025-07-08 22:09:38.921699
+2025-07-08 22:09:38,922 - __main__ - INFO - Total duration: 0:20:52.599621
+2025-07-08 22:09:38,922 - __main__ - INFO - Loaded 31 rows across 15 tables
